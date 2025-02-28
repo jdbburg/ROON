@@ -1,11 +1,12 @@
 <script>
     import { createEventDispatcher } from 'svelte';
-    const dispatch = createEventDispatcher();
+  
     export let commands = [];
+    const dispatch = createEventDispatcher();
     let searchTerm = "";
     let filteredCommands = commands;
   
-    $: filteredCommands = commands.filter(cmd => 
+    $: filteredCommands = commands.filter(cmd =>
       cmd.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
   
@@ -17,7 +18,13 @@
   </script>
   
   <div class="palette">
-    <input type="text" placeholder="Type a command..." bind:value={searchTerm} on:keydown={handleKeyDown} autofocus />
+    <input
+      type="text"
+      placeholder="Type a command..."
+      bind:value={searchTerm}
+      on:keydown={handleKeyDown}
+      autofocus
+    />
     <ul>
       {#each filteredCommands as cmd}
         <li on:click={() => dispatch('selectCommand', cmd)}>{cmd.name}</li>
