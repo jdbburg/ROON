@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import Node from './Node.svelte';
 	import CommandPalette from './CommandPalette.svelte';
+	import Link from './Link.svelte';
   
 
 /* ---------------------------------------------------------------------------
@@ -139,22 +140,6 @@
 		}
 
 		return { cx: gx, cy: gy };
-
-		// 4) Convert from graph coords → the fraction inside the current viewBox
-		//    Current visible region is: (cameraX, cameraY, viewWidth, viewHeight)
-		const viewWidth = baseWidth / scale;
-		const viewHeight = baseHeight / scale;
-
-		// Fraction across the viewBox in x/y
-		// 0.0 => cameraX, 1.0 => cameraX + viewWidth
-		const fx = (gx - cameraX) / viewWidth;
-		const fy = (gy - cameraY) / viewHeight;
-
-		// 5) Convert those fractions to actual screen/pixel coords
-		const cx = fx * svgWidth;
-		const cy = fy * svgHeight;
-
-		return { cx, cy };
 	}
 
 	function findNearestSocket(mouseX, mouseY) {
@@ -218,31 +203,150 @@
 * GRAPH DATA (Nodes, Connections)
 * ------------------------------------------------------------------------- */
 	let graphData = {
-	  nodes: [
-		{
-		  id: "1",
-		  name: "add_numbers",
-		  inputs: [
-			{ name: "a", type: "number", default: 5 },
-			{ name: "b", type: "number", default: 3 }
-		  ],
-		  outputs: [{ name: "result", type: "number" }],
-		  position: { x: 100, y: 150 } // in "graph" coords
-		},
-		{
-		  id: "2",
-		  name: "print_result",
-		  inputs: [{ name: "value", type: "number", default: null }],
-		  outputs: [],
-		  position: { x: 400, y: 150 }
-		}
-	  ],
-	  connections: [
-		{
-		  from: { node: "1", output: "result" },
-		  to:   { node: "2", input: "value" }
-		}
-	  ]
+    "nodes": [
+        {
+            "id": "1",
+            "name": "add_numbers",
+            "inputs": [
+                {
+                    "name": "a",
+                    "type": "number",
+                    "default": 5
+                },
+                {
+                    "name": "b",
+                    "type": "number",
+                    "default": 3
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "result",
+                    "type": "number"
+                }
+            ],
+            "position": {
+                "x": 100,
+                "y": 150
+            }
+        },
+        {
+            "id": "2",
+            "name": "print_result",
+            "inputs": [
+                {
+                    "name": "value",
+                    "type": "number",
+                    "default": null
+                }
+            ],
+            "outputs": [],
+            "position": {
+                "x": 487.7523990599577,
+                "y": 204.72011966538503
+            }
+        },
+        {
+            "name": "open_root_file",
+            "inputs": [
+                {
+                    "name": "path",
+                    "type": "str",
+                    "default": "example.root",
+                    "kind": "POSITIONAL_OR_KEYWORD"
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "file",
+                    "type": "uproot.reading.ReadOnlyDirectory"
+                },
+                {
+                    "name": "keys",
+                    "type": "list[str]"
+                },
+                {
+                    "name": "view",
+                    "type": "str"
+                }
+            ],
+            "docstring": "Facility for text visualization.",
+            "source": "def open_root_file(path: str = \"example.root\") -> RootFileResult:\n    \"\"\"Facility for text visualization.\"\"\"\n    f = uproot.open(path)\n    view = json.dumps(f.classnames(), indent=4)\n    return {\n        'file': f,\n        'keys': f.keys(),\n        'view': view,\n    }",
+            "id": "3",
+            "position": {
+                "x": 657.1297880062386,
+                "y": 4.21793756957652
+            }
+        },
+        {
+            "name": "calculate_total",
+            "inputs": [
+                {
+                    "name": "price",
+                    "type": "float",
+                    "default": null,
+                    "kind": "POSITIONAL_OR_KEYWORD"
+                },
+                {
+                    "name": "quantity",
+                    "type": "int",
+                    "default": "1",
+                    "kind": "POSITIONAL_OR_KEYWORD"
+                },
+                {
+                    "name": "tax_rate",
+                    "type": "float",
+                    "default": "0.1",
+                    "kind": "POSITIONAL_OR_KEYWORD"
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "return_value",
+                    "type": "float"
+                }
+            ],
+            "docstring": "Calculate the total cost including tax.\n\nArgs:\n    price: Base price of the item\n    quantity: Number of items\n    tax_rate: Tax rate as a decimal",
+            "source": "def calculate_total(price: float, quantity: int = 1, tax_rate: float = 0.1) -> float:\n    \"\"\"\n    Calculate the total cost including tax.\n    \n    Args:\n        price: Base price of the item\n        quantity: Number of items\n        tax_rate: Tax rate as a decimal\n    \"\"\"\n    subtotal = price * quantity\n    tax = subtotal * tax_rate\n    return subtotal + tax",
+            "id": "4",
+            "position": {
+                "x": 607.3928812326479,
+                "y": 448.7565066724061
+            }
+        }
+    ],
+    "connections": [
+        {
+            "from": {
+                "node": "1",
+                "output": "result"
+            },
+            "to": {
+                "node": "2",
+                "input": "value"
+            }
+        },
+        {
+            "from": {
+                "node": "1",
+                "output": "result"
+            },
+            "to": {
+                "node": "3",
+                "input": "path"
+            }
+        },
+        {
+            "from": {
+                "node": "1",
+                "output": "result"
+            },
+            "to": {
+                "node": "4",
+                "input": "quantity"
+            }
+        }
+    ]
 	};
 
 
@@ -487,30 +591,41 @@
   
 	// Zoom in/out with mouse wheel
 	function handleWheel(e) {
-	  e.preventDefault();
-	  const direction = e.deltaY < 0 ? 1 : -1;
-	  // We scale by factor * scale => exponential zoom
-	  scale += direction * ZOOM_FACTOR * scale;
-	  scale = Math.max(0.1, Math.min(scale, 10));
+	  
+		if (e.ctrlKey != 1){
+			// two finger pan
+			e.preventDefault();
+			const panFactor = 1.1;
+			cameraY += (e.deltaY * panFactor) / scale;
+			cameraX += (e.deltaX * panFactor) / scale;
+	  	} else {
+			// scroll zoom
+			e.preventDefault();
+			const direction = e.deltaY < 0 ? 1 : -1;
+			scale += direction * ZOOM_FACTOR * scale;
+			scale = Math.max(0.1, Math.min(scale, 10));
+	  	}
 	}
   
 	// WASD panning + +/- zoom
 	function handleKeyDown(e) {
 	  // For panning, we move camera in graph coords
 	  // e.g. pressing W => cameraY -= some offset
-	  if (e.key === 'w' || e.key === 'W') {
-		cameraY -= 50 / scale;
-	  } else if (e.key === 's' || e.key === 'S') {
-		cameraY += 50 / scale;
-	  } else if (e.key === 'a' || e.key === 'A') {
-		cameraX -= 50 / scale;
-	  } else if (e.key === 'd' || e.key === 'D') {
-		cameraX += 50 / scale;
-	  } else if (e.key === '=') {
-		scale = Math.min(scale + ZOOM_FACTOR * scale, 10);
-	  } else if (e.key === '-') {
-		scale = Math.max(scale - ZOOM_FACTOR * scale, 0.1);
-	  }
+	  	if (!showCommandPalette) {
+			if (e.key === 'w' || e.key === 'W') {
+				cameraY -= 50 / scale;
+			} else if (e.key === 's' || e.key === 'S') {
+				cameraY += 50 / scale;
+			} else if (e.key === 'a' || e.key === 'A') {
+				cameraX -= 50 / scale;
+			} else if (e.key === 'd' || e.key === 'D') {
+				cameraX += 50 / scale;
+			} else if (e.key === '=') {
+				scale = Math.min(scale + ZOOM_FACTOR * scale, 10);
+			} else if (e.key === '-') {
+				scale = Math.max(scale - ZOOM_FACTOR * scale, 0.1);
+			}
+		}
   
 	  // Toggle command palette
 	  if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.code === 'KeyP') {
@@ -646,18 +761,13 @@
 	  on:mousemove={handleMouseMove}
 	>
 	  <!-- Render connections -->
-	  {#each graphData.connections as conn (conn.from.node + '-' + conn.to.node)}
-		<path d={computePathData(conn)} stroke="#555" stroke-width="2" fill="none" />
+	  {#each graphData.connections as conn}
+		<!-- TODO: add a circle in the center of each path to quickly add a node there -->
+		<Link path={computePathData(conn)} />
 	  {/each}
 
-	  
-  
 	  <!-- Render nodes -->
 	  {#each graphData.nodes as node (node.id)}
-		<!-- 
-		  Node.svelte will draw at node.position.x,y 
-		  and handle dragging in graph coords. 
-		-->
 		<Node
 		  {node}
 		  on:socketPointerDown={handleSocketPointerDown}
@@ -666,8 +776,6 @@
 		  {screenToGraphCoords}
 		/>
 	  {/each}
-	  	<!-- Draw a small circle at the mouse pointer in graph coords -->
-  		<!-- <circle cx={mouseX} cy={mouseY} r="5" fill="red" /> -->
 
 		<!-- Ghost path for the in-progress connection -->
 		{#if activeConnection}
