@@ -3,20 +3,231 @@
 	import Node from './Node.svelte';
 	import CommandPalette from './CommandPalette.svelte';
   
-	/* ---------------------------------------------------------------------------
-	 * GRAPH DATA (Nodes, Connections)
-	 * ------------------------------------------------------------------------- */
+
+/* ---------------------------------------------------------------------------
+* Drag n Drop Connection Logic
+* ------------------------------------------------------------------------- */
+	let activeConnection = null; // e.g. { from: {...}, to: { x, y } }
+  	let hoveredSocket = null;    // optional, if you want snapping
+	let mouseX = 0;
+	let mouseY = 0;
+
+	// Called when user clicks on a socket in Node.svelte
+	function handleSocketPointerDown(e) {
+		const { nodeId, socketName, socketType, clientX, clientY } = e.detail;
+		// Start a new connection
+		let gc = screenToGraphCoords(e.clientX, e.clientY);
+		activeConnection = {
+			from: { nodeId, socketName, socketType },
+			to:   { x: gc.x, y: gc.y }
+		};
+		// Listen for pointermove/pointerup globally
+		window.addEventListener('pointermove', handleConnectionPointerMove);
+		window.addEventListener('pointerup', handleConnectionPointerUp);
+	}
+
+	function handleConnectionPointerMove(e) {
+		
+		if (!activeConnection) return;
+		
+		let gc = screenToGraphCoords(e.clientX, e.clientY);
+		// Update the 'to' position (graph coords)
+		activeConnection.to.x = gc.x;
+		activeConnection.to.y = gc.y;
+
+		// If you want to highlight a potential drop target, find a nearby socket
+		hoveredSocket = findNearestSocket(e.clientX, e.clientY);
+	}
+
+	function handleConnectionPointerUp(e) {
+		// return;
+		window.removeEventListener('pointermove', handleConnectionPointerMove);
+		window.removeEventListener('pointerup', handleConnectionPointerUp);
+
+		if (!activeConnection) return;
+
+		// Check if pointer-up is on a valid socket
+		const dropSocket = findNearestSocket(e.clientX, e.clientY);
+		if (dropSocket) {
+		// Create the connection in your graph data
+		graphData.connections = [
+			...graphData.connections,
+			{
+			from: {
+				node: activeConnection.from.nodeId,
+				output: (activeConnection.from.socketType === 'output')
+				? activeConnection.from.socketName
+				: dropSocket.socketName
+			},
+			to: {
+				node: dropSocket.nodeId,
+				input: (activeConnection.from.socketType === 'output')
+				? dropSocket.socketName
+				: activeConnection.from.socketName
+			}
+			}
+		];
+		}
+		// Clear the active connection
+		activeConnection = null;
+		hoveredSocket = null;
+	}
+
+	// Draw the ghost path from the source socket to the mouse
+	function computeActiveConnectionPath( conn ) {
+		// console.log("activeConnection", activeConnection);
+		if (!conn) return "";
+		const source = getSocketScreenCoords(conn.from);
+		if (!source || isNaN(source.cx) || isNaN(source.cy) ) return "";
+		// If hoveredSocket is found, snap to that; else use the current mouse
+		const targetX = hoveredSocket
+		? hoveredSocket.cx
+		: conn.to.x;
+		const targetY = hoveredSocket
+		? hoveredSocket.cy
+		: conn.to.y;
+
+		if (isNaN(targetX) || isNaN(targetY)) return "";
+
+		const dx = Math.abs(targetX - source.cx) / 2;
+
+		console.debug( `M ${source.cx} ${source.cy}
+				C ${source.cx + dx} ${source.cy}
+				${targetX - dx} ${targetY}
+				${targetX} ${targetY}` );
+
+		
+		return `M ${source.cx} ${source.cy}
+				C ${source.cx + dx} ${source.cy}
+				${targetX - dx} ${targetY}
+				${targetX} ${targetY}`;
+	}
+
+	// Reactive statement: recalc whenever activeConnection changes
+	$: ghostPath = computeActiveConnectionPath(activeConnection);
+
+	function getSocketScreenCoords({ nodeId, socketName, socketType }) {
+		// 1) Find the node by ID
+		const node = graphData.nodes.find(n => n.id === nodeId);
+		if (!node) {
+			console.log(`Node ${nodeId} not found`);
+			return { cx: 0, cy: 0 };
+		}
+
+		// 2) Determine if we’re looking among inputs or outputs
+		const sockets = (socketType === 'input') ? node.inputs : node.outputs;
+		const index = sockets.findIndex(s => s.name === socketName);
+		if (index < 0) {
+			console.log(`Socket ${socketName} not found in node ${nodeId}`);
+			return { cx: 0, cy: 0 };
+		}
+
+		// 3) Calculate the socket’s position in graph coords
+		//    (Adjust these offsets for your node geometry)
+		const nodeWidth = 160;
+		const topOffset = 30;
+		const spacing = 25;
+
+		let gx, gy;
+		if (socketType === 'input') {
+			gx = node.position.x;
+			gy = node.position.y + topOffset + index * spacing;
+		} else {
+			// 'output'
+			gx = node.position.x + (nodeWidth);
+			gy = node.position.y + topOffset + index * spacing;
+		}
+
+		return { cx: gx, cy: gy };
+
+		// 4) Convert from graph coords → the fraction inside the current viewBox
+		//    Current visible region is: (cameraX, cameraY, viewWidth, viewHeight)
+		const viewWidth = baseWidth / scale;
+		const viewHeight = baseHeight / scale;
+
+		// Fraction across the viewBox in x/y
+		// 0.0 => cameraX, 1.0 => cameraX + viewWidth
+		const fx = (gx - cameraX) / viewWidth;
+		const fy = (gy - cameraY) / viewHeight;
+
+		// 5) Convert those fractions to actual screen/pixel coords
+		const cx = fx * svgWidth;
+		const cy = fy * svgHeight;
+
+		return { cx, cy };
+	}
+
+	function findNearestSocket(mouseX, mouseY) {
+		const snapRadius = 15; // pixel distance
+		let closest = null;
+		let minDist = Infinity;
+
+		for (const node of graphData.nodes) {
+			for (const input of node.inputs) {
+				// Convert that input’s graph coords -> screen coords
+				const { cx, cy } = getSocketScreenCoords({
+					nodeId: node.id,
+					socketName: input.name,
+					socketType: 'input'
+				});
+
+				// Distance from mouse in pixel space
+				const dx = mouseX - cx;
+				const dy = mouseY - cy;
+				const dist = Math.sqrt(dx*dx + dy*dy);
+
+				if (dist < snapRadius && dist < minDist) {
+					minDist = dist;
+					closest = {
+						nodeId: node.id,
+						socketName: input.name,
+						cx,
+						cy
+					};
+				}
+			}
+			for (const output of node.outputs) {
+				// Convert that socket's graph coords -> screen coords
+				const { cx, cy } = getSocketScreenCoords({
+					nodeId: node.id,
+					socketName: output.name,
+					socketType: 'output'
+				});
+
+				// Distance from mouse in pixel space
+				const dx = mouseX - cx;
+				const dy = mouseY - cy;
+				const dist = Math.sqrt(dx*dx + dy*dy);
+
+				if (dist < snapRadius && dist < minDist) {
+					minDist = dist;
+					closest = {
+						nodeId: node.id,
+						socketName: output.name,
+						cx,
+						cy
+					};
+				}
+			}
+		}
+
+		return closest; // or null if none within snapRadius
+	}
+
+/* ---------------------------------------------------------------------------
+* GRAPH DATA (Nodes, Connections)
+* ------------------------------------------------------------------------- */
 	let graphData = {
 	  nodes: [
 		{
 		  id: "1",
 		  name: "add_numbers",
 		  inputs: [
-		  { name: "a", type: "number", default: 5 },
-		  { name: "b", type: "number", default: 3 }
+			{ name: "a", type: "number", default: 5 },
+			{ name: "b", type: "number", default: 3 }
 		  ],
 		  outputs: [{ name: "result", type: "number" }],
-		  position: { x: 100, y: 150 } // in 'graph' coordinates
+		  position: { x: 100, y: 150 } // in "graph" coords
 		},
 		{
 		  id: "2",
@@ -33,21 +244,29 @@
 		}
 	  ]
 	};
+
+
+	// Whenever graphData changes, assign it to window.graphData so the console sees the latest state.
+	// ONLY for DEBUGGING, remove this line in production!
+	$: window.graphData = graphData;
   
-	/* ---------------------------------------------------------------------------
-	 * COMMAND PALETTE
-	 * ------------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------
+* COMMAND PALETTE
+* ------------------------------------------------------------------------- */
 	let showCommandPalette = false;
 	let commands = [
-	  { name: 'Add Node', action: 'addNode' },
-	  { name: 'Delete Selected Node', action: 'deleteNode' }
+		{ name: 'Add Node', action: 'addNode', callable: addNode },
+		{ name: 'Delete Selected Node', action: 'deleteNode', deleteSelectedNode },
+		{ name: 'Load Graph', action: 'loadGraph', callable: loadGraphFromFile },
+		{ name: 'Insert Node from JSON', callable: insertNodeFromFile },
 	];
 	let selectedNodeId = null;
   
 	function handleCommand(cmd) {
-	  if (cmd.action === 'addNode') addNode();
-	  else if (cmd.action === 'deleteNode') deleteSelectedNode();
-	  showCommandPalette = false;
+		if (cmd.callable && typeof cmd.callable === 'function') {
+			cmd.callable();
+		}
+		showCommandPalette = false;
 	}
   
 	function addNode() {
@@ -63,6 +282,7 @@
 		],
 		position: { x: 200, y: 200 }
 	  };
+	  console.log(newNode);
 	  graphData.nodes = [...graphData.nodes, newNode];
 	}
   
@@ -74,52 +294,187 @@
 	  );
 	  selectedNodeId = null;
 	}
-  
-	/* ---------------------------------------------------------------------------
-	 * CAMERA STATE: Panning & Zooming
-	 * ------------------------------------------------------------------------- */
-	let panX = 0;
-	let panY = 0;
-	let scale = 1.0;
-  
-	// For middle-mouse dragging
-	let isPanning = false;
-	let startPanX, startPanY;
-	let startMouseX, startMouseY;
-  
-	// For controlling zoom speed, panning speed
-	const ZOOM_FACTOR = 0.1;
-	const PAN_SPEED = 20; // WASD panning speed
-  
-	// Convert screen coordinates -> graph coordinates
-	function screenToGraphCoords(screenX, screenY) {
-	  return {
-		x: (screenX - panX) / scale,
-		y: (screenY - panY) / scale
-	  };
+
+
+/* ---------------------------------------------------------------------------
+* INSERT NODE FROM JSON (new feature)
+* ------------------------------------------------------------------------- */
+	let nodeFileInputRef; // hidden file input for inserting node(s)
+
+	function insertNodeFromFile() {
+		nodeFileInputRef.click();
+	}
+
+	function handleNodeFileChange(e) {
+		const file = e.target.files[0];
+		if (!file) return;
+
+		const reader = new FileReader();
+		reader.onload = (event) => {
+			try {
+				// Expecting either a single node object or an array of nodes
+				const data = JSON.parse(event.target.result);
+				
+				// If the file has a single node object
+				if (!Array.isArray(data)) {
+					// Insert one node
+					addNodeToGraph(data);
+				} else {
+					// Insert multiple nodes
+					for (const nodeDef of data) {
+						addNodeToGraph(nodeDef);
+					}
+				}
+			} catch (err) {
+				console.error("Invalid node JSON:", err);
+			}
+		};
+		reader.readAsText(file);
+
+		e.target.value = "";
+	}
+
+	// Helper: add a node definition to the graph, auto-assign ID if missing
+	function addNodeToGraph(nodeDef) {
+		console.log(nodeDef);
+		// If the nodeDef doesn't have an id, generate one
+		if (!nodeDef.id) {
+			nodeDef.id = (graphData.nodes.length + 1).toString();
+		}
+		// If there's no position, default it somewhere
+		if (!nodeDef.position) {
+			nodeDef.position = { x: 100, y: 100 };
+		}
+		// Merge it into the array
+		graphData.nodes = [...graphData.nodes, nodeDef];
+	}
+
+
+	// -- FILE LOADING LOGIC --
+	let fileInputRef; // reference to the hidden <input type="file" />
+
+	function loadGraphFromFile() {
+		// Programmatically click the hidden file input
+		fileInputRef.click();
+	}
+
+	function handleFileChange(e) {
+	const file = e.target.files[0];
+	if (!file) return;
+
+	const reader = new FileReader();
+	reader.onload = (event) => {
+		try {
+		const data = JSON.parse(event.target.result);
+		// Replace current graphData with the loaded data
+		graphData = data;
+		} catch (err) {
+		console.error("Invalid JSON file:", err);
+		}
+	};
+	reader.readAsText(file);
+
+	// Reset the value so the user can load the same file again if needed
+	e.target.value = "";
 	}
   
-	// Middle mouse down => start panning
+/* ---------------------------------------------------------------------------
+* VIEWBOX-BASED CAMERA: Panning & Zooming
+* -------------------------------------------------------------------------
+* We treat the SVG coordinate system as 0..baseWidth by 0..baseHeight.
+* The 'camera' is defined by (cameraX, cameraY, scale), meaning:
+*   - top-left corner of the visible area is (cameraX, cameraY)
+*   - width of visible area is (baseWidth / scale), likewise for height
+* Adjusting cameraX/cameraY pans; adjusting scale zooms.
+* The final viewBox is updated accordingly.
+* ------------------------------------------------------------------------- */
+	// instead of using a fixed value I did this - but it is not reactive...
+	// let canvasWidth = 0;
+	// let canvasHeight = 0;
+	let baseWidth = window.innerWidth;  // The nominal coordinate space width
+	let baseHeight = window.innerHeight; // The nominal coordinate space height
+  
+	let cameraX = 0;   // top-left in graph coords
+	let cameraY = 0;
+	let scale = 1.0;
+  
+	// We'll measure the actual rendered SVG size so we can convert
+	// screen (mouse) coords to graph coords. This is optional, but recommended.
+	let svgRef;
+	let svgWidth = 0;
+	let svgHeight = 0;
+
+	// these wont update on their own, so respond to the change in baseWidth and baseHeight
+	$: if ( svgRef && baseWidth !== undefined ) svgWidth = svgRef.clientWidth;
+	$: if ( svgRef && baseHeight !== undefined ) svgHeight = svgRef.clientHeight;
+	
+	// For middle-mouse panning
+	let isPanning = false;
+	let startMouseX, startMouseY; // pointerdown positions in screen coords
+	let startCamX, startCamY;
+  
+	const ZOOM_FACTOR = 0.1;
+	const PAN_SPEED = 20;
+  
+	onMount(() => {
+	  window.addEventListener('keydown', handleKeyDown);
+	  return () => window.removeEventListener('keydown', handleKeyDown);
+	});
+  
+	// Convert from screenX/screenY => graph coords
+	// For top-left anchored zoom, we do:
+	function screenToGraphCoords(sx, sy) {
+	  // fraction across the svg in each dimension
+	  let fx = sx / svgWidth;
+	  let fy = sy / svgHeight;
+  
+	  // width & height in graph coords that currently fill the entire svg
+	  let w = baseWidth / scale;
+	  let h = baseHeight / scale;
+  
+	  // cameraX, cameraY define the top-left corner in graph coords
+	  let gx = cameraX + fx * w;
+	  let gy = cameraY + fy * h;
+	  return { x: gx, y: gy };
+	}
+  
+	// Update camera after user drags the middle mouse
 	function handleMouseDown(e) {
-	  // Only handle middle mouse button (button === 1)
 	  if (e.button === 1) {
 		e.preventDefault();
 		isPanning = true;
 		startMouseX = e.clientX;
 		startMouseY = e.clientY;
-		startPanX = panX;
-		startPanY = panY;
+		startCamX = cameraX;
+		startCamY = cameraY;
+  
 		window.addEventListener('mousemove', handleMouseMove);
 		window.addEventListener('mouseup', handleMouseUp);
 	  }
 	}
   
 	function handleMouseMove(e) {
+		const { x, y } = screenToGraphCoords(e.clientX, e.clientY);
+		mouseX = x;
+		mouseY = y;
 	  if (!isPanning) return;
+	  // dx in screen coords
 	  const dx = e.clientX - startMouseX;
 	  const dy = e.clientY - startMouseY;
-	  panX = startPanX + dx;
-	  panY = startPanY + dy;
+  
+	  // Convert dx/dy in screen coords to dx/dy in graph coords
+	  // If the entire svg is showing w = (baseWidth / scale) in graph coords,
+	  // then dx pixels in screen space => dx * (w / svgWidth) in graph coords.
+	  let w = baseWidth / scale;
+	  let h = baseHeight / scale;
+  
+	  const graphDX = dx * (w / svgWidth);
+	  const graphDY = dy * (h / svgHeight);
+  
+	  // Because dragging the mouse right usually means camera goes left:
+	  // We subtract. If you prefer the opposite, just flip the sign.
+	  cameraX = startCamX - graphDX;
+	  cameraY = startCamY - graphDY;
 	}
   
 	function handleMouseUp(e) {
@@ -130,40 +485,45 @@
 	  }
 	}
   
-	// Mouse wheel => zoom in/out
+	// Zoom in/out with mouse wheel
 	function handleWheel(e) {
 	  e.preventDefault();
-	  const delta = e.deltaY < 0 ? 1 : -1; // up => zoom in, down => zoom out
-	  scale += delta * ZOOM_FACTOR * scale; // scale up or down proportionally
-	  scale = Math.max(0.1, Math.min(scale, 10)); // clamp
+	  const direction = e.deltaY < 0 ? 1 : -1;
+	  // We scale by factor * scale => exponential zoom
+	  scale += direction * ZOOM_FACTOR * scale;
+	  scale = Math.max(0.1, Math.min(scale, 10));
 	}
   
-	// Keyboard panning (WASD) & zooming (+/-)
+	// WASD panning + +/- zoom
 	function handleKeyDown(e) {
+	  // For panning, we move camera in graph coords
+	  // e.g. pressing W => cameraY -= some offset
 	  if (e.key === 'w' || e.key === 'W') {
-		panY += PAN_SPEED;
+		cameraY -= 50 / scale;
 	  } else if (e.key === 's' || e.key === 'S') {
-		panY -= PAN_SPEED;
+		cameraY += 50 / scale;
 	  } else if (e.key === 'a' || e.key === 'A') {
-		panX += PAN_SPEED;
+		cameraX -= 50 / scale;
 	  } else if (e.key === 'd' || e.key === 'D') {
-		panX -= PAN_SPEED;
-	  } else if (e.key === '+') {
+		cameraX += 50 / scale;
+	  } else if (e.key === '=') {
 		scale = Math.min(scale + ZOOM_FACTOR * scale, 10);
 	  } else if (e.key === '-') {
 		scale = Math.max(scale - ZOOM_FACTOR * scale, 0.1);
 	  }
   
-	  // Command palette toggle: Cmd+Shift+P or Ctrl+Shift+P
+	  // Toggle command palette
 	  if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.code === 'KeyP') {
 		showCommandPalette = !showCommandPalette;
 	  }
+	  // Add this condition to close the command palette when Esc is pressed
+	  if (e.key === 'Escape' && showCommandPalette) {
+		showCommandPalette = false;
+	  }
 	}
   
-	onMount(() => {
-	  window.addEventListener('keydown', handleKeyDown);
-	  return () => window.removeEventListener('keydown', handleKeyDown);
-	});
+	// The final derived viewBox, updated whenever cameraX, cameraY, or scale changes
+	$: viewBoxString = `${cameraX} ${cameraY} ${baseWidth / scale} ${baseHeight / scale}`;
   
 	/* ---------------------------------------------------------------------------
 	 * CONNECTIONS
@@ -172,6 +532,7 @@
 	  return graphData.nodes.find(n => n.id === id);
 	}
   
+	// For each connection, compute an SVG path from the source socket to the target socket
 	function computePathData(conn) {
 	  const sourceNode = getNodeById(conn.from.node);
 	  const targetNode = getNodeById(conn.to.node);
@@ -179,68 +540,54 @@
 	  const sourceIndex = sourceNode.outputs.findIndex(o => o.name === conn.from.output);
 	  const targetIndex = targetNode.inputs.findIndex(i => i.name === conn.to.input);
   
+	  // Convert node coords to the same coordinate system as the viewBox (graph coords)
 	  const sourcePos = getSocketPosition(sourceNode, 'output', sourceIndex);
 	  const targetPos = getSocketPosition(targetNode, 'input', targetIndex);
   
-	  const delta = Math.abs(targetPos.cx - sourcePos.cx) / 2;
-	  return `M ${sourcePos.cx} ${sourcePos.cy}
-			  C ${sourcePos.cx + delta} ${sourcePos.cy}
-				${targetPos.cx - delta} ${targetPos.cy}
-				${targetPos.cx} ${targetPos.cy}`;
+	  // We'll just do a simple cubic curve
+	  const delta = Math.abs(targetPos.x - sourcePos.x) / 2;
+	  return `M ${sourcePos.x} ${sourcePos.y}
+			  C ${sourcePos.x + delta} ${sourcePos.y}
+				${targetPos.x - delta} ${targetPos.y}
+				${targetPos.x} ${targetPos.y}`;
 	}
   
-	// Get socket coordinates in screen space
+	// Return the (x,y) in graph coords for a socket
+	// Because we're directly using viewBox, these are just node.position plus offsets
 	function getSocketPosition(node, type, index) {
-	  // node.position is in 'graph' coords
-	  // We'll transform to screen coords by applying the camera transform
 	  const nodeWidth = 160;
 	  const topOffset = 30;
 	  const spacing = 25;
   
-	  let localX = 0, localY = 0;
-	  if (type === 'input') {
-		localX = node.position.x + 5;
-		localY = node.position.y + topOffset + index * spacing;
-	  } else {
-		localX = node.position.x + (nodeWidth - 5);
-		localY = node.position.y + topOffset + index * spacing;
-	  }
+	  let x = (type === 'input')
+		? node.position.x + 5
+		: node.position.x + (nodeWidth - 5);
   
-	  // Convert graph coords to screen coords:
-	  return {
-		cx: localX * scale + panX,
-		cy: localY * scale + panY
-	  };
+	  let y = node.position.y + topOffset + index * spacing;
+  
+	  return { x, y };
 	}
   
-	// Called when a node is clicked => select it
 	function selectNode(id) {
 	  selectedNodeId = id;
 	}
   
-	// Update node position after dragging (the node receives 'graph' coords)
+	// Called by Node.svelte when a node is dragged
 	function updateNodePosition(id, x, y) {
 	  graphData.nodes = graphData.nodes.map(n =>
 		n.id === id ? { ...n, position: { x, y } } : n
 	  );
 	}
-  </script>
+</script>
   
-  <style>
+<style>
+	:global(body) { /* this will apply to <body> */ margin: 0; padding: 0; }
 	.canvas {
 	  width: 100%;
 	  height: 100vh;
 	  background-color: #f5f5f5;
 	  position: relative;
 	  overflow: hidden;
-	}
-	/* Graph container is where we apply transform for pan & zoom (CSS approach) */
-	.graph-container {
-	  width: 100%;
-	  height: 100%;
-	  transform-origin: center center; /* zoom around middle of container */
-	  /* We'll apply translate/scale inline with style binding. */
-	  position: relative;
 	}
 	.command-palette-overlay {
 	  position: absolute;
@@ -251,46 +598,86 @@
 	  align-items: center;
 	  z-index: 10;
 	}
-  </style>
-  
-  <div
+</style>
+
+<svelte:window
+	bind:innerWidth={baseWidth}
+	bind:innerHeight={baseHeight}
+	/>
+  <!-- 
+	The .canvas fills the browser window. 
+	We attach on:mousedown and on:wheel for panning & zooming. 
+  -->
+<div
 	class="canvas"
 	on:mousedown|preventDefault={handleMouseDown}
 	on:wheel|preventDefault={handleWheel}
   >
-	<!--
-	  We'll do a nested DIV for the 'graph-container' that is translated/scaled by panX, panY, scale.
-	  Inside it, we place an <svg> for connections & nodes. Another approach is using an <svg> alone
-	  and setting <g transform>, but CSS transforms are simpler for center-based zoom in many browsers.
+
+  	
+  	<!-- Hidden file input for loading JSON -->
+	<input
+	type="file"
+	accept="application/json"
+	bind:this={fileInputRef}
+	on:change={handleFileChange}
+	style="display: none;"
+	/>
+
+	 <!-- Hidden file input for inserting node from JSON -->
+	 <input
+	 type="file"
+	 accept="application/json"
+	 bind:this={nodeFileInputRef}
+	 on:change={handleNodeFileChange}
+	 style="display: none;"
+   />
+
+	<!-- 
+	  The SVG itself uses a reactive viewBox string. 
+	  We bind a ref to measure its size. 
 	-->
-	<div
-	  class="graph-container"
-	  style="transform: translate({panX}px, {panY}px) scale({scale});"
+	<svg
+	  bind:this={svgRef}
+	  width="100%"
+	  height="100%"	
+	  viewBox={viewBoxString}
+	  preserveAspectRatio="none"
+	  on:mousemove={handleMouseMove}
 	>
-	  <svg width="100%" height="100%">
-		<!-- Render connections -->
-		{#each graphData.connections as conn (conn.from.node + '-' + conn.to.node)}
-		  <path d={computePathData(conn)} stroke="#555" stroke-width="2" fill="none" />
-		{/each}
+	  <!-- Render connections -->
+	  {#each graphData.connections as conn (conn.from.node + '-' + conn.to.node)}
+		<path d={computePathData(conn)} stroke="#555" stroke-width="2" fill="none" />
+	  {/each}
+
+	  
   
-		<!-- Render nodes -->
-		{#each graphData.nodes as node (node.id)}
-		  <Node
-			{node}
-			on:drag={(e) => updateNodePosition(node.id, e.detail.x, e.detail.y)}
-			on:select={() => selectNode(node.id)}
-			{screenToGraphCoords}
-			{scale}
-			{panX}
-			{panY}
-		  />
-		{/each}
-	  </svg>
-	</div>
+	  <!-- Render nodes -->
+	  {#each graphData.nodes as node (node.id)}
+		<!-- 
+		  Node.svelte will draw at node.position.x,y 
+		  and handle dragging in graph coords. 
+		-->
+		<Node
+		  {node}
+		  on:socketPointerDown={handleSocketPointerDown}
+		  on:drag={(e) => updateNodePosition(node.id, e.detail.x, e.detail.y)}
+		  on:select={() => selectNode(node.id)}
+		  {screenToGraphCoords}
+		/>
+	  {/each}
+	  	<!-- Draw a small circle at the mouse pointer in graph coords -->
+  		<!-- <circle cx={mouseX} cy={mouseY} r="5" fill="red" /> -->
+
+		<!-- Ghost path for the in-progress connection -->
+		{#if activeConnection}
+			<path d={ghostPath} stroke="red" stroke-width="2" fill="none" />
+		{/if}
+	</svg>
   
 	{#if showCommandPalette}
 	  <div class="command-palette-overlay">
 		<CommandPalette {commands} on:selectCommand={(e) => handleCommand(e.detail)} />
 	  </div>
 	{/if}
-  </div>
+</div>

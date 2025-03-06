@@ -5,14 +5,32 @@
     const dispatch = createEventDispatcher();
     let searchTerm = "";
     let filteredCommands = commands;
+    let selectedIndex = 0;  // NEW: tracks which command is highlighted
+
   
     $: filteredCommands = commands.filter(cmd =>
       cmd.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
+    $: selectedIndex = 0;  // reset selection each time search changes
+
   
     function handleKeyDown(e) {
       if (e.key === "Enter" && filteredCommands.length > 0) {
-        dispatch('selectCommand', filteredCommands[0]);
+        dispatch('selectCommand', filteredCommands[selectedIndex]);
+      }
+      // ARROW DOWN moves selection forward
+      else if (e.key === 'ArrowDown') {
+        if (filteredCommands.length > 0) {
+            selectedIndex = (selectedIndex + 1) % filteredCommands.length;
+            e.preventDefault();
+        }
+      }
+      // ARROW UP moves selection backward
+      else if (e.key === 'ArrowUp') {
+        if (filteredCommands.length > 0) {
+            selectedIndex = (selectedIndex - 1 + filteredCommands.length) % filteredCommands.length;
+            e.preventDefault();
+        }
       }
     }
   </script>
@@ -26,8 +44,14 @@
       autofocus
     />
     <ul>
-      {#each filteredCommands as cmd}
-        <li on:click={() => dispatch('selectCommand', cmd)}>{cmd.name}</li>
+      {#each filteredCommands as cmd, i}
+        <!-- Highlight the currently selected item -->
+        <li
+        class:selected={i === selectedIndex}
+        on:click={() => dispatch('selectCommand', cmd)}
+        >
+        {cmd.name}
+        </li>
       {/each}
     </ul>
   </div>
@@ -59,5 +83,8 @@
     }
     li:hover {
       background: #eee;
+    }
+    li.selected {
+      background: #eee;  /* highlight color */
     }
   </style>
