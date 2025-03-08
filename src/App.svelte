@@ -3,6 +3,7 @@
 	import Node from './Node.svelte';
 	import CommandPalette from './CommandPalette.svelte';
 	import Link from './Link.svelte';
+	import BuiltInNodes from './BuiltInNodes.svelte';
   
 
 /* ---------------------------------------------------------------------------
@@ -15,6 +16,7 @@
 
 	// Called when user clicks on a socket in Node.svelte
 	function handleSocketPointerDown(e) {
+		console.debug( "SocketPointerDown" );
 		const { nodeId, socketName, socketType, clientX, clientY } = e.detail;
 		// Start a new connection
 		let gc = screenToGraphCoords(e.clientX, e.clientY);
@@ -359,11 +361,41 @@
 * ------------------------------------------------------------------------- */
 	let showCommandPalette = false;
 	let commands = [
+		{ name: 'Save Graph', callable: saveGraphAsJSON },	
 		{ name: 'Add Node', action: 'addNode', callable: addNode },
 		{ name: 'Delete Selected Node', action: 'deleteNode', deleteSelectedNode },
 		{ name: 'Load Graph', action: 'loadGraph', callable: loadGraphFromFile },
 		{ name: 'Insert Node from JSON', callable: insertNodeFromFile },
+		{ name: 'New Graph', callable: () => { graphData.nodes = []; graphData.connections = []; }},
+		
 	];
+
+	function saveGraphAsJSON() {
+		const data = {
+			nodes: graphData.nodes,
+			connections: graphData.connections
+		};
+	try {
+        const jsonString = JSON.stringify(data, null, 2); // Pretty print with 2 spaces
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        // Create a temporary link element to trigger download
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `data-${new Date().toISOString()}.json`; // Filename with timestamp
+        document.body.appendChild(link);
+        link.click();
+        
+        // Cleanup
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error('Error saving JSON:', error);
+        // You might want to add error handling UI here
+      }
+	}
+
 	let selectedNodeId = null;
   
 	function handleCommand(cmd) {
@@ -519,7 +551,7 @@
   
 	const ZOOM_FACTOR = 0.1;
 	const PAN_SPEED = 20;
-  
+
 	onMount(() => {
 	  window.addEventListener('keydown', handleKeyDown);
 	  return () => window.removeEventListener('keydown', handleKeyDown);
@@ -544,8 +576,16 @@
   
 	// Update camera after user drags the middle mouse
 	function handleMouseDown(e) {
+		console.log( "tagname: ", e.target.tagName );
+		if (e.target.tagName === 'INPUT' || 
+			e.target.closest('foreignObject') || 
+			e.target.tagName === 'foreignObject') {
+			
+				console.log("skipping mouse down event");
+				return;
+		}
 	  if (e.button === 1) {
-		e.preventDefault();
+		// e.preventDefault();
 		isPanning = true;
 		startMouseX = e.clientX;
 		startMouseY = e.clientY;
@@ -589,6 +629,24 @@
 	  }
 	}
   
+	function handleZoom( direction ){
+		// 1. Get the current center of the view in graph coordinates
+		const viewWidth = baseWidth / scale;
+		const viewHeight = baseHeight / scale;
+		const centerX = cameraX + viewWidth / 2;
+		const centerY = cameraY + viewHeight / 2;
+
+		// 2. Determine zoom direction and update scale
+		scale += direction * ZOOM_FACTOR * scale;
+		scale = Math.max(0.1, Math.min(scale, 10));
+
+		// 3. Adjust cameraX and cameraY to keep the center fixed
+		const newViewWidth = baseWidth / scale;
+		const newViewHeight = baseHeight / scale;
+		cameraX = centerX - newViewWidth / 2;
+		cameraY = centerY - newViewHeight / 2;
+	}
+
 	// Zoom in/out with mouse wheel
 	function handleWheel(e) {
 	  
@@ -599,11 +657,8 @@
 			cameraY += (e.deltaY * panFactor) / scale;
 			cameraX += (e.deltaX * panFactor) / scale;
 	  	} else {
-			// scroll zoom
 			e.preventDefault();
-			const direction = e.deltaY < 0 ? 1 : -1;
-			scale += direction * ZOOM_FACTOR * scale;
-			scale = Math.max(0.1, Math.min(scale, 10));
+			handleZoom( e.deltaY < 0 ? 1 : -1 );
 	  	}
 	}
   
@@ -621,9 +676,9 @@
 			} else if (e.key === 'd' || e.key === 'D') {
 				cameraX += 50 / scale;
 			} else if (e.key === '=') {
-				scale = Math.min(scale + ZOOM_FACTOR * scale, 10);
+				handleZoom(1);
 			} else if (e.key === '-') {
-				scale = Math.max(scale - ZOOM_FACTOR * scale, 0.1);
+				handleZoom(-1);
 			}
 		}
   
@@ -728,7 +783,6 @@
 	on:mousedown|preventDefault={handleMouseDown}
 	on:wheel|preventDefault={handleWheel}
   >
-
   	
   	<!-- Hidden file input for loading JSON -->
 	<input
@@ -760,6 +814,12 @@
 	  preserveAspectRatio="none"
 	  on:mousemove={handleMouseMove}
 	>
+		<circle
+			cx={mouseX}
+			cy={mouseY}
+			r={5}
+			fill="#F00"
+		></circle>
 	  <!-- Render connections -->
 	  {#each graphData.connections as conn}
 		<!-- TODO: add a circle in the center of each path to quickly add a node there -->
@@ -770,6 +830,7 @@
 	  {#each graphData.nodes as node (node.id)}
 		<Node
 		  {node}
+		  {selectedNodeId}
 		  on:socketPointerDown={handleSocketPointerDown}
 		  on:drag={(e) => updateNodePosition(node.id, e.detail.x, e.detail.y)}
 		  on:select={() => selectNode(node.id)}
@@ -788,4 +849,5 @@
 		<CommandPalette {commands} on:selectCommand={(e) => handleCommand(e.detail)} />
 	  </div>
 	{/if}
+	<p style="display:inline" >Selected Node: {selectedNodeId}</p>
 </div>

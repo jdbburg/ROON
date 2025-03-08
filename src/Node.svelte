@@ -26,16 +26,12 @@
     e.stopPropagation();
     dragging = true;
 
-    node.selected = !node.selected;
-
     // Convert the screen coords to graph coords
     const { x, y } = screenToGraphCoords(e.clientX, e.clientY);
     startGraphX = x;
     startGraphY = y;
     origNodeX = node.position.x;
     origNodeY = node.position.y;
-
-    console.log("outline_color: ", outline_color)
 
     dispatch('select');
     window.addEventListener('pointermove', handlePointerMove);
