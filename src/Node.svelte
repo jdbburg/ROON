@@ -4,12 +4,18 @@
 
   export let node;
   export let screenToGraphCoords; // function from parent
+  export let selectedNodeId;
   const dispatch = createEventDispatcher();
 
   let dragging = false;
   let startGraphX, startGraphY; // the initial pointer position in graph coords
   let origNodeX, origNodeY;     // the node's original position
-  let showWidgets = false;
+  let showWidgets = true;
+  
+  // outline the node if selected
+  $: selected = ( selectedNodeId == node.id )
+  $: outline_color =  !selected ? "#000" : "#F00";
+  $: outline_stroke_width = !selected ? 1 : 2;
 
   // Show widgets
   // export let show_widgets = false;
@@ -20,12 +26,16 @@
     e.stopPropagation();
     dragging = true;
 
+    node.selected = !node.selected;
+
     // Convert the screen coords to graph coords
     const { x, y } = screenToGraphCoords(e.clientX, e.clientY);
     startGraphX = x;
     startGraphY = y;
     origNodeX = node.position.x;
     origNodeY = node.position.y;
+
+    console.log("outline_color: ", outline_color)
 
     dispatch('select');
     window.addEventListener('pointermove', handlePointerMove);
@@ -93,8 +103,8 @@
       width="160"
       height="{calcNodeHeight()}"
       fill="#fff"
-      stroke="#333"
-      stroke-width="1"
+      stroke={outline_color}
+      stroke-width={outline_stroke_width}
     />
     <text x="10" y="15" font-size="12" fill="#333">[{node.id}]: {node.name}</text>
 
