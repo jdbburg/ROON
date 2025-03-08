@@ -44,6 +44,13 @@
     return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
   }
 
+  function handleInputClick(e) {
+    e.stopPropagation();
+    e.preventDefault();
+    // Explicitly focus the input element
+    e.target.focus();
+  }
+
     // Called when the user pointer-downs on an output socket
   function handleSocketPointerDown(type, socketName, index, event) {
     if ( type === 'input' ) return; // for now, until we handle correctly
@@ -88,25 +95,32 @@
 
     {#if (socketFlow == "input" && showWidgets)}
     <foreignObject
-        x="15"
+        x="17"
         y={20 + index * 25}
         width="130"
         height="24"
-        style="overflow: visible;"
+        style="overflow: visible; pointer-events: none;"
       >
+      <div style="pointer-events: auto;">
       {#if socket.type === 'number'}
           <input
             type="number"
             value={socket.default}
             style="width:75%; height:20px; font-size:12px; box-sizing:border-box;"
             on:change={(e) => socket.default = parseFloat(e.target.value)}
+            on:pointerdown|stopPropagation
+            on:click|stopPropagation={handleInputClick}
+            on:focus|stopPropagation
           />
         {:else if socket.type === 'string'}
           <input
             type="text"
             value={socket.default}
-            style="width:100%; height:20px; font-size:12px; box-sizing:border-box;"
+            style="width:100%; height:20px; font-size:12px; box-sizing:border-box; pointer-events: auto;"
             on:change={(e) => socket.default = e.target.value}
+            on:pointerdown|stopPropagation
+            on:click|stopPropagation={handleInputClick}
+            on:focus|stopPropagation
           />
         {:else}
           <input
@@ -114,8 +128,12 @@
             value={socket.default}
             style="width:100%; height:20px; font-size:12px; box-sizing:border-box;"
             on:change={(e) => socket.default = e.target.value}
+            on:pointerdown|stopPropagation
+            on:click|stopPropagation={handleInputClick}
+            on:focus|stopPropagation
           />
         {/if}
+      </div>
     </foreignObject>
     {/if}
 
