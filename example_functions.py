@@ -24,7 +24,8 @@ class RootFileResult(TypedDict):
     file: uproot.ReadOnlyDirectory
     keys: list[str]
     view: str
-
+    
+# SetupUpRoot()
 def open_root_file(path: str = "example.root") -> RootFileResult:
     """Facility for text visualization."""
     f = uproot.open(path)
@@ -34,3 +35,9 @@ def open_root_file(path: str = "example.root") -> RootFileResult:
         'keys': f.keys(),
         'view': view,
     }
+
+def let( v ):
+    return v
+
+def print_node( v ):
+    print(v)
