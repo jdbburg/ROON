@@ -549,8 +549,7 @@
 	let startMouseX, startMouseY; // pointerdown positions in screen coords
 	let startCamX, startCamY;
   
-	const ZOOM_FACTOR = 0.1;
-	const PAN_SPEED = 20;
+	const ZOOM_FACTOR = 0.1; // 10% zoom per wheel event
 
 	onMount(() => {
 	  window.addEventListener('keydown', handleKeyDown);
@@ -584,17 +583,6 @@
 				console.log("skipping mouse down event");
 				return;
 		}
-	  if (e.button === 1) {
-		// e.preventDefault();
-		isPanning = true;
-		startMouseX = e.clientX;
-		startMouseY = e.clientY;
-		startCamX = cameraX;
-		startCamY = cameraY;
-  
-		window.addEventListener('mousemove', handleMouseMove);
-		window.addEventListener('mouseup', handleMouseUp);
-	  }
 	}
   
 	function handleMouseMove(e) {
@@ -629,7 +617,7 @@
 	  }
 	}
   
-	function handleZoom( direction ){
+	function handleCameraZoom( direction ){
 		// 1. Get the current center of the view in graph coordinates
 		const viewWidth = baseWidth / scale;
 		const viewHeight = baseHeight / scale;
@@ -647,18 +635,22 @@
 		cameraY = centerY - newViewHeight / 2;
 	}
 
+	function handleCameraPan( dx, dy ){
+		cameraX += dx / scale;
+		cameraY += dy / scale;
+	}
+
 	// Zoom in/out with mouse wheel
 	function handleWheel(e) {
-	  
 		if (e.ctrlKey != 1){
 			// two finger pan
 			e.preventDefault();
-			const panFactor = 1.1;
-			cameraY += (e.deltaY * panFactor) / scale;
-			cameraX += (e.deltaX * panFactor) / scale;
+			const panFactor = 1.1; // just to make my mouse pan a little faster
+			handleCameraPan( e.deltaX * panFactor, e.deltaY * panFactor );
 	  	} else {
+			// handles ctrl + zoom wheel AND pinch to zoom (magic?)
 			e.preventDefault();
-			handleZoom( e.deltaY < 0 ? 1 : -1 );
+			handleCameraZoom( 0.5 * (e.deltaY < 0 ? 1 : -1) );
 	  	}
 	}
   
@@ -668,17 +660,17 @@
 	  // e.g. pressing W => cameraY -= some offset
 	  	if (!showCommandPalette) {
 			if (e.key === 'w' || e.key === 'W') {
-				cameraY -= 50 / scale;
+				handleCameraPan( 0, -50 );
 			} else if (e.key === 's' || e.key === 'S') {
-				cameraY += 50 / scale;
+				handleCameraPan( 0, 50 );
 			} else if (e.key === 'a' || e.key === 'A') {
-				cameraX -= 50 / scale;
+				handleCameraPan( -50, 0 );
 			} else if (e.key === 'd' || e.key === 'D') {
-				cameraX += 50 / scale;
+				handleCameraPan( 50, 0 );
 			} else if (e.key === '=') {
-				handleZoom(1);
+				handleCameraZoom(1);
 			} else if (e.key === '-') {
-				handleZoom(-1);
+				handleCameraZoom(-1);
 			}
 		}
   
