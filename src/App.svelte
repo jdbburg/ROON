@@ -3,12 +3,54 @@
 	import Node from './Node.svelte';
 	import CommandPalette from './CommandPalette.svelte';
 	import Link from './Link.svelte';
-	import BuiltInNodes from './BuiltInNodes.svelte';
-  
+	// import BuiltInNodes from './BuiltInNodes.svelte';
+	import { checkCollision } from 'svg-path-intersections';
+    // import PyodideTerm from './PyodideTerm.svelte';
+    import PyodideRepl from './PyodideREPL.svelte';
+
+	let pyodide; // Pyodide instance
+
+	// some debug stuff
+	let highlightPointer = false;
+	let highlightPosition = { x: 0, y: 0 };
+
+/* ---------------------------------------------------------------------------
+ * Command undo/redo logic
+ * ------------------------------------------------------------------------- */
+	let commandHistory = [];
+	let commandIndex = -1;
+
+	function pushCommand(cmd) {
+		// If we're in the middle of the history, overwrite the current command
+		if (commandIndex < commandHistory.length - 1) {
+			commandHistory = commandHistory.slice(0, commandIndex + 1);
+		}
+		commandHistory.push(cmd);
+		commandIndex = commandHistory.length - 1;
+	}
+
+	function undo() {
+		console.log("Undo { commandIndex: ", commandIndex, "}");
+		if (commandIndex < 0) return;
+		const cmd = commandHistory[commandIndex];
+		if (cmd.undo) cmd.undo();
+		commandIndex--;
+	}
+
+	function redo() {
+		if (commandIndex >= commandHistory.length - 1) return;
+		commandIndex++;
+		const cmd = commandHistory[commandIndex];
+		if (cmd.redo) cmd.redo();
+	}
+
 
 /* ---------------------------------------------------------------------------
 * Drag n Drop Connection Logic
 * ------------------------------------------------------------------------- */
+	let startGraphCoords = { x: 0, y: 0 };
+	let mouseGraphCoords = { x: 0, y: 0 };
+	let activeCutConnection = null;
 	let activeConnection = null; // e.g. { from: {...}, to: { x, y } }
   	let hoveredSocket = null;    // optional, if you want snapping
 	let mouseX = 0;
@@ -48,6 +90,7 @@
 		window.removeEventListener('pointerup', handleConnectionPointerUp);
 
 		if (!activeConnection) return;
+
 
 		// Check if pointer-up is on a valid socket
 		const dropSocket = findNearestSocket(e.clientX, e.clientY);
@@ -106,8 +149,14 @@
 				${targetX} ${targetY}`;
 	}
 
+	function computeActiveCutConnectionPath( active, start, to ) {
+		if (!active) return "";
+		return `M ${start.x} ${start.y} L ${to.x} ${to.y}`;
+	}
+
 	// Reactive statement: recalc whenever activeConnection changes
 	$: ghostPath = computeActiveConnectionPath(activeConnection);
+	$: ghostCutPath = computeActiveCutConnectionPath( activeCutConnection, startGraphCoords, mouseGraphCoords );
 
 	function getSocketScreenCoords({ nodeId, socketName, socketType }) {
 		// 1) Find the node by ID
@@ -144,24 +193,27 @@
 		return { cx: gx, cy: gy };
 	}
 
+	// Find the nearest socket to the mouse within a certain radius
 	function findNearestSocket(mouseX, mouseY) {
 		const snapRadius = 15; // pixel distance
 		let closest = null;
 		let minDist = Infinity;
 
+		let graphPosition = screenToGraphCoords(mouseX, mouseY);
+
 		for (const node of graphData.nodes) {
+			let index = 0;
 			for (const input of node.inputs) {
 				// Convert that input’s graph coords -> screen coords
-				const { cx, cy } = getSocketScreenCoords({
-					nodeId: node.id,
-					socketName: input.name,
-					socketType: 'input'
-				});
+				const cx = node.position.x;
+				const cy = node.position.y + 30 + index * 25;
+				console.log( "cx: ", cx, "cy: ", cy );
 
 				// Distance from mouse in pixel space
-				const dx = mouseX - cx;
-				const dy = mouseY - cy;
+				const dx = graphPosition.x - cx;
+				const dy = graphPosition.y - cy;
 				const dist = Math.sqrt(dx*dx + dy*dy);
+				console.log( "dist: ", dist );
 
 				if (dist < snapRadius && dist < minDist) {
 					minDist = dist;
@@ -172,33 +224,43 @@
 						cy
 					};
 				}
-			}
-			for (const output of node.outputs) {
-				// Convert that socket's graph coords -> screen coords
-				const { cx, cy } = getSocketScreenCoords({
-					nodeId: node.id,
-					socketName: output.name,
-					socketType: 'output'
-				});
-
-				// Distance from mouse in pixel space
-				const dx = mouseX - cx;
-				const dy = mouseY - cy;
-				const dist = Math.sqrt(dx*dx + dy*dy);
-
-				if (dist < snapRadius && dist < minDist) {
-					minDist = dist;
-					closest = {
-						nodeId: node.id,
-						socketName: output.name,
-						cx,
-						cy
-					};
-				}
+				index++;
 			}
 		}
 
 		return closest; // or null if none within snapRadius
+	}
+
+	// Intersection checking
+	function checkCutIntersections() {
+		if (!activeCutConnection) return;
+		let currentPath = computeActiveCutConnectionPath(activeCutConnection, startGraphCoords, mouseGraphCoords);
+		
+		// compute length of the cut path from startGraphCoords and mouseGraphCoords
+		// if the length is less than a certain threshold, then we don't want to cut
+		// if the length is greater than a certain threshold, then we want to cut
+		let cutPathLength = Math.sqrt( Math.pow( mouseGraphCoords.x - startGraphCoords.x, 2 ) + Math.pow( mouseGraphCoords.y - startGraphCoords.y, 2 ) );
+		if ( cutPathLength < 20 ) return;
+		const graphDataCopy = structuredClone(graphData);
+		let cmd = {
+			undo: () => {
+				console.log("Undo cut: ", graphDataCopy.connections);
+				// 1. Find the connection that was cut
+				// 2. Add it back to the connections array
+				graphData.connections = graphDataCopy.connections;
+			},
+			redo: () => {}
+		}
+
+		// 1. Find all connections that intersect with the current path
+		// Filter out connections that intersect with the current path
+		graphData.connections = graphData.connections.filter(conn => {
+			return checkCollision(computePathData(conn), currentPath) === 0;
+		});
+
+		// only push command if something actually changed
+		if ( graphData.connections.length !== graphDataCopy.connections.length )
+			pushCommand(cmd);
 	}
 
 /* ---------------------------------------------------------------------------
@@ -361,14 +423,87 @@
 * ------------------------------------------------------------------------- */
 	let showCommandPalette = false;
 	let commands = [
+		{ name: 'Run Engine', callable: () => {runEngine(graphData);} },
 		{ name: 'Save Graph', callable: saveGraphAsJSON },	
 		{ name: 'Add Node', action: 'addNode', callable: addNode },
 		{ name: 'Delete Selected Node', action: 'deleteNode', deleteSelectedNode },
 		{ name: 'Load Graph', action: 'loadGraph', callable: loadGraphFromFile },
 		{ name: 'Insert Node from JSON', callable: insertNodeFromFile },
 		{ name: 'New Graph', callable: () => { graphData.nodes = []; graphData.connections = []; }},
-		
+		{ name: 'Undo', callable: undo },
+		{ name: 'Redo', callable: redo },
 	];
+
+	async function runEngine( graphDataCopy ) {
+        // 1) Load engine.py from your server (or embed it directly)
+        // const enginePy = await (await fetch('/engine.py')).text();
+        // This executes the code in engine.py so that its functions become available in Pyodide
+        let pyodide = window.pyodide;
+		// await pyodide.runPythonAsync(enginePy);
+
+		
+        // 2) Convert graphData to a JSON string for Python
+        const graphJson = JSON.stringify(graphDataCopy);
+
+		// 2a) Escape backslashes and double quotes in that JSON string
+		const escapedGraphJson = graphJson
+			.replace(/\\/g, '\\\\')  // escape all backslashes
+			.replace(/"/g, '\\"');   // escape all double quotes
+
+        // 3) Build a Python snippet that:
+        //    - Imports json and engine
+        //    - Parses graphJson
+        //    - Calls the evaluate function
+        //    - Returns the result as a JSON string
+        const pythonCode = `
+import json
+
+
+# Convert the string into a Python dict
+graph_dict = json.loads("""${escapedGraphJson}""")
+
+# Evaluate using your DAG logic in engine.py
+result = generate_python_script(graph_dict)
+
+# Return the result as JSON so Pyodide can hand it back
+json.dumps(result)
+`;
+
+        // 4) Run the Python code
+		console.log('Running engine...');
+		console.log('Python code:', pythonCode);
+        const output = await pyodide.runPythonAsync(pythonCode);
+
+        // output is whatever the last expression returns, so we have a JSON string
+        console.log('Engine raw output:\n', output);
+
+		// assuming that worked...
+		
+		// pyodide.setStdout({ batched: 
+        //   (output) => {
+        //       console.log("STDOUT GEN: ", output);
+        //     //   outputLines = [...outputLines, output];
+        //     }
+        //   }
+        //   );
+		try {
+			await pyodide.runPythonAsync( output );
+			console.log("Run generated script complete");
+		}  catch (err) {
+			console.error("Error running generated script:", err);
+
+		}
+		console.log("Running Engine Complete");
+		
+		// console.log('Generated Script Output:', generated_script_output );
+
+		// console.log("PRINTED: ", printed);
+        // 5) Parse the returned JSON in JavaScript
+        // const parsed = JSON.parse(output);
+        // console.log('Parsed DAG evaluation result:', parsed);
+
+        // Now `parsed` is a JS object with your DAG outputs.
+    }
 
 	function saveGraphAsJSON() {
 		const data = {
@@ -423,7 +558,23 @@
 	}
   
 	function deleteSelectedNode() {
+		console.debug( "DeleteSelectedNode: ", selectedNodeId );
 	  if (!selectedNodeId) return;
+
+	  const graphDataCopy = structuredClone(graphData);
+	  let cmd = {
+			undo: () => {
+
+				console.log("Delete Node: ");
+				// 1. Find the connection that was cut
+				// 2. Add it back to the connections array
+				graphData.nodes = graphDataCopy.nodes;
+				graphData.connections = graphDataCopy.connections;
+			},
+			redo: () => {}
+		}
+		pushCommand(cmd);
+
 	  graphData.nodes = graphData.nodes.filter(n => n.id !== selectedNodeId);
 	  graphData.connections = graphData.connections.filter(conn =>
 		conn.from.node !== selectedNodeId && conn.to.node !== selectedNodeId
@@ -543,16 +694,17 @@
 	// these wont update on their own, so respond to the change in baseWidth and baseHeight
 	$: if ( svgRef && baseWidth !== undefined ) svgWidth = svgRef.clientWidth;
 	$: if ( svgRef && baseHeight !== undefined ) svgHeight = svgRef.clientHeight;
-	
-	// For middle-mouse panning
-	let isPanning = false;
-	let startMouseX, startMouseY; // pointerdown positions in screen coords
-	let startCamX, startCamY;
-  
+	  
 	const ZOOM_FACTOR = 0.1; // 10% zoom per wheel event
 
+	async function setup(){
+        let pyodide = await loadPyodide();
+        console.log(pyodide.runPython("1 + 2"));
+      }
 	onMount(() => {
 	  window.addEventListener('keydown', handleKeyDown);
+	//   setup();
+
 	  return () => window.removeEventListener('keydown', handleKeyDown);
 	});
   
@@ -583,38 +735,30 @@
 				console.log("skipping mouse down event");
 				return;
 		}
+		// save starting mouse position and camera position
+		if (e.button === 0 && e.target.tagName === 'svg') {
+			selectedNodeId = null;
+			mouseGraphCoords = startGraphCoords = screenToGraphCoords(e.clientX, e.clientY);
+			activeCutConnection = true;
+		}
 	}
   
 	function handleMouseMove(e) {
+		// console.debug( "MouseMove" );
 		const { x, y } = screenToGraphCoords(e.clientX, e.clientY);
 		mouseX = x;
 		mouseY = y;
-	  if (!isPanning) return;
-	  // dx in screen coords
-	  const dx = e.clientX - startMouseX;
-	  const dy = e.clientY - startMouseY;
-  
-	  // Convert dx/dy in screen coords to dx/dy in graph coords
-	  // If the entire svg is showing w = (baseWidth / scale) in graph coords,
-	  // then dx pixels in screen space => dx * (w / svgWidth) in graph coords.
-	  let w = baseWidth / scale;
-	  let h = baseHeight / scale;
-  
-	  const graphDX = dx * (w / svgWidth);
-	  const graphDY = dy * (h / svgHeight);
-  
-	  // Because dragging the mouse right usually means camera goes left:
-	  // We subtract. If you prefer the opposite, just flip the sign.
-	  cameraX = startCamX - graphDX;
-	  cameraY = startCamY - graphDY;
+		mouseGraphCoords = { x, y };
+		// console.log( "CutPAth: ", computeActiveCutConnectionPath() );
+
 	}
   
 	function handleMouseUp(e) {
-	  if (e.button === 1) {
-		isPanning = false;
-		window.removeEventListener('mousemove', handleMouseMove);
-		window.removeEventListener('mouseup', handleMouseUp);
-	  }
+		console.debug( "MouseUp" );
+		// handle link disconnect
+		checkCutIntersections();
+		activeCutConnection = null;
+		
 	}
   
 	function handleCameraZoom( direction ){
@@ -671,7 +815,23 @@
 				handleCameraZoom(1);
 			} else if (e.key === '-') {
 				handleCameraZoom(-1);
+			} else if (e.key === 'h' || e.key === 'H') {
+				// highlightPointer = !highlightPointer;
+				
+				cameraX = 0;
+				cameraY = 0;
+				scale = 0.5;
+			} else if (e.key === 'Delete' || e.key === 'Backspace') {
+				console.log("Delete key pressed");
+				deleteSelectedNode();
+			} else if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
+				undo();
+			} else if ((e.metaKey || e.ctrlKey) && e.key === 'y') {
+				redo();
+			} else if ( e.key === 'Escape' ) {
+				selectedNodeId = null;
 			}
+
 		}
   
 	  // Toggle command palette
@@ -681,7 +841,7 @@
 	  // Add this condition to close the command palette when Esc is pressed
 	  if (e.key === 'Escape' && showCommandPalette) {
 		showCommandPalette = false;
-	  }
+	  } 
 	}
   
 	// The final derived viewBox, updated whenever cameraX, cameraY, or scale changes
@@ -773,9 +933,17 @@
 <div
 	class="canvas"
 	on:mousedown|preventDefault={handleMouseDown}
+	on:mouseup={handleMouseUp}
 	on:wheel|preventDefault={handleWheel}
   >
-  	
+  <!-- <script>
+	async function doLoadPyodide() {
+		const pyodide = await window.loadPyodide();
+		window.pyodide = pyodide;
+	  return pyodide;
+	}
+	doLoadPyodide();
+  </script> -->
   	<!-- Hidden file input for loading JSON -->
 	<input
 	type="file"
@@ -806,12 +974,14 @@
 	  preserveAspectRatio="none"
 	  on:mousemove={handleMouseMove}
 	>
-		<circle
-			cx={mouseX}
-			cy={mouseY}
-			r={5}
-			fill="#F00"
-		></circle>
+		{#if highlightPointer}
+			<circle
+				cx={mouseX}
+				cy={mouseY}
+				r={5}
+				fill="#F00"
+			></circle>
+		{/if}
 	  <!-- Render connections -->
 	  {#each graphData.connections as conn}
 		<!-- TODO: add a circle in the center of each path to quickly add a node there -->
@@ -834,6 +1004,11 @@
 		{#if activeConnection}
 			<path d={ghostPath} stroke="red" stroke-width="2" fill="none" />
 		{/if}
+
+		<!-- Ghost path for the in-progress cut connection -->
+		<!-- {#if activeCutConnection} -->
+		<path d={ghostCutPath} stroke="red" stroke-width="2" fill="none" />
+		<!-- {/if} -->
 	</svg>
   
 	{#if showCommandPalette}
@@ -841,5 +1016,6 @@
 		<CommandPalette {commands} on:selectCommand={(e) => handleCommand(e.detail)} />
 	  </div>
 	{/if}
-	<p style="display:inline" >Selected Node: {selectedNodeId}</p>
+	<!-- <PyodideTerm /> -->
 </div>
+<PyodideRepl {pyodide} />

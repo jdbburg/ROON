@@ -25,9 +25,7 @@
     }
 
 
-    function colorForType(type, saturation = 60, lightness = 50) {
-        console.debug("Coloring socket of type: ", socket.type)
-        
+  function colorForType(type, saturation = 60, lightness = 50) {
     // Simple hash
     let hash = 0;
     for (let i = 0; i < type.length; i++) {
