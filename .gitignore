@@ -2,3 +2,12 @@
 /public/build/
 
 .DS_Store
+big_graph_example.json
+*.root
+*.pyc
+nodes/uproot2/__init__.py
+nodes/uproot2/defs.py
+nodes/uproot2/open_root_file.json
+nodes/uproot2/plot_histogram.json
+nodes/uproot2/read_tree_branch.json
+nodes/uproot2/TypedDict.json
