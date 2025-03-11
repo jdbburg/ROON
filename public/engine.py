@@ -94,7 +94,7 @@ def generate_python_script(json_data):
 
     # Assemble the full script
     module_import_star_lines = [module_import_star(module) for module in dependency_modules]
-    script = "import sys\n\nsys.path.append('/')\n\n" + "\n\n".join(module_import_star_lines) + "\n\n".join(function_defs) + "\n\n" + "\n".join(
+    script = "import sys\n\nsys.path.append('/user-data/')\n\n" + "\n\n".join(module_import_star_lines) + "\n\n".join(function_defs) + "\n\n" + "\n".join(
         f"{line}" for line in execution_lines
     )
     return script

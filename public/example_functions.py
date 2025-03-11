@@ -42,3 +42,4 @@ def let( v ):
 
 def print_node( v ):
     print(v)
+    return v
