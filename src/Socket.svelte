@@ -1,5 +1,7 @@
 <script>
     import { createEventDispatcher } from 'svelte';
+    import { socketColorForType, socketPosition } from './node_utilities.ts';
+    import { config } from './CONF.js';
     export let socket;
     export let index;
     export let nodeId; // id of our Node if needed
@@ -8,39 +10,7 @@
     const socketRadius = 4
     const dispatch = createEventDispatcher();
 
-    let offsetX = (socketFlow == "input" ? 10 : -50 );
-
-    const hueOverrides = {
-        "str": 72,
-        "string" : 72,
-        "number" : 330
-    }
-
-    function socketPosition( ){
-        if (socketFlow == "input"){
-            return { x: 0, y: 30 + index * 25 }
-        }  
-
-        return { x: 160, y:30 + index * 25 }
-    }
-
-
-  function colorForType(type, saturation = 60, lightness = 50) {
-    // Simple hash
-    let hash = 0;
-    for (let i = 0; i < type.length; i++) {
-      hash = type.charCodeAt(i) + ((hash << 5) - hash);
-      // no need for bitwise & here in JS, but you can do hash |= 0 to keep 32-bit
-    }
-
-    // Convert the hash to a hue from 0..359
-    let hue = Math.abs(hash) % 360;
-    if (type in hueOverrides)
-        hue = hueOverrides[type]
-
-    // Return an HSL color with a fixed saturation & lightness
-    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-  }
+    let offsetX = (socketFlow == "input" ? 8 : -50 );
 
   function handleInputClick(e) {
     e.stopPropagation();
@@ -79,22 +49,22 @@
 
 </style>
 <g>
-
-
     <text
-        x={socketPosition().x + offsetX}
-        y={30 + index * 25}
-        font-size="10"
-        fill="#333"
-        dominant-baseline="middle"
-        >
-        {socket.name}
-    </text>
+      x={socketPosition(socketFlow, index).x + (socketFlow === "input" ? 8 : -8)}
+      y={config.node.header.height + index * config.node.socket.separation}
+      font-size="10"
+      fill="#333"
+      dominant-baseline="middle"
+      text-anchor={socketFlow === "input" ? "start" : "end"}
+  >
+      {socket.name}
+  </text>
+  <text></text>
 
     {#if (socketFlow == "input" && showWidgets && socket.default !== undefined)}
     <foreignObject
         x="17"
-        y={20 + index * 25}
+        y={config.node.header.height + index * config.node.socket.separation}
         width="130"
         height="24"
         style="overflow: visible; pointer-events: none;"
@@ -139,21 +109,21 @@
     <g class="socket-group"
         on:pointerdown = {(e) => handleSocketPointerDown(socketFlow, socket.name, index, e)}
         >
-        <!-- outer -->
+        <!-- circle outline -->
         <circle
             class="socket ${socket.type}-socket"
-            cx={socketPosition().x}
-            cy={socketPosition().y}
+            cx={socketPosition(socketFlow, index).x}
+            cy={socketPosition(socketFlow, index).y}
             r={socketRadius + 2}
-            fill={colorForType(socket.type, 90, 20)}
+            fill={socketColorForType(socket.type, 90, 20)}
         /> 
         <!-- inner -->
         <circle
             class="socket output-socket"
-            cx={socketPosition().x}
-            cy={socketPosition().y}
+            cx={socketPosition(socketFlow, index).x}
+            cy={socketPosition(socketFlow, index).y}
             r={socketRadius}
-            fill={colorForType(socket.type)}
+            fill={socketColorForType(socket.type)}
         />
     </g>
 </g>

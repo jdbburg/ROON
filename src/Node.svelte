@@ -1,6 +1,7 @@
 <script>
   import { createEventDispatcher } from 'svelte';
   import Socket from './Socket.svelte';
+  import { config } from './CONF.js';
 
   export let node;
   export let screenToGraphCoords; // function from parent
@@ -14,7 +15,7 @@
   
   // outline the node if selected
   $: selected = ( selectedNodeId == node.id )
-  $: outline_color =  !selected ? "#000" : "#F00";
+  $: outline_color =  !selected ? "#000" : "hsl(200, 100%, 50%)";
   $: outline_stroke_width = !selected ? 1 : 2;
 
   // Show widgets
@@ -58,9 +59,13 @@
 
   // Dynamically compute the node's height for neat layout
   function calcNodeHeight() {
-    const baseHeight = 40; // space for title
+    const baseHeight = config.node.header.height; // space for title
     const maxIO = Math.max(node.inputs.length, node.outputs.length);
-    return baseHeight + maxIO * 25;
+    return baseHeight + maxIO * config.node.socket.separation;
+  }
+
+  function calcNodeWidth() {
+    return config.node.width;
   }
 
   // Called when the user pointer-downs on an output socket
@@ -96,13 +101,13 @@
     <rect
       x="0" y="0"
       rx="5" ry="5"
-      width="160"
+      width="{calcNodeWidth()}"
       height="{calcNodeHeight()}"
       fill="#fff"
       stroke={outline_color}
       stroke-width={outline_stroke_width}
     />
-    <text x="10" y="15" font-size="12" fill="#333">[{node.id}]: {node.name}</text>
+    <text x="10" y="{config.node.header.height / 3.0}" font-size="12" fill="#333">[{node.id}]: {node.name}</text>
 
     <!-- Inputs -->
     {#each node.inputs as input, i}

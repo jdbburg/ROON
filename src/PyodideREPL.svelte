@@ -1,6 +1,6 @@
 <script>
     import { onMount } from "svelte";
-    import { doLoadPyodide } from "./python_utils.js";
+    import { doLoadPyodide, mountDirectory } from "./python_utils.js";
 
     export let pyodide; // the Pyodide instance passed from the parent
   
@@ -39,6 +39,7 @@
     onMount(async () => {
         console.log("PyodideREPL onMount");
         pyodide = await doLoadPyodide( handleStdOut );
+        mountDirectory(pyodide);
     });
   </script>
   

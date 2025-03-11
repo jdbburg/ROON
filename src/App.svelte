@@ -7,7 +7,8 @@
 	import { checkCollision } from 'svg-path-intersections';
     // import PyodideTerm from './PyodideTerm.svelte';
     import PyodideRepl from './PyodideREPL.svelte';
-	import { runEngine } from './python_utils.js';
+	import { runEngine, mountDirectory } from './python_utils.js';
+    import { config } from './CONF';
 
 	let pyodide; // Pyodide instance
 
@@ -177,9 +178,9 @@
 
 		// 3) Calculate the socket’s position in graph coords
 		//    (Adjust these offsets for your node geometry)
-		const nodeWidth = 160;
-		const topOffset = 30;
-		const spacing = 25;
+		const nodeWidth = config.node.width;
+		const topOffset = config.node.header.height;
+		const spacing = config.node.socket.separation;
 
 		let gx, gy;
 		if (socketType === 'input') {
@@ -359,7 +360,7 @@
 		{ name: 'Undo', callable: undo },
 		{ name: 'Redo', callable: redo },
 		{ name: 'Save Image', callable: saveAsSVG },
-		{ name: 'setup fs', callable: () => { setupFS();} },
+		{ name: 'setup fs', callable: mountDirectory },
 		{ name: 'Generate Python Script', callable: generateScriptAndSave}
 	];
 
@@ -375,20 +376,6 @@
 		a.click();
 		document.body.removeChild(a);
 		URL.revokeObjectURL(url);
-
-	}
-	async function setupFS() {
-		const dirHandle = await showDirectoryPicker();
-		const permissionStatus = await dirHandle.requestPermission({
-			mode: "readwrite",
-			});
-
-		if (permissionStatus !== "granted") {
-			throw new Error("readwrite access to directory not granted");
-		}
-
-		const nativefs = await window.pyodide.mountNativeFS("/user-data", dirHandle);
-		await nativefs.syncfs();
 	}
 
 	function saveAsSVG() {
@@ -911,11 +898,11 @@
 
 		<!-- Ghost path for the in-progress connection -->
 		{#if activeConnection}
-			<path d={ghostPath} stroke="red" stroke-width="2" fill="none" />
+			<path d={ghostPath} stroke="{config.link.active.color}" stroke-width="{config.link.active.stroke_width}" fill="none" />
 		{/if}
 
 		<!-- Ghost path for the in-progress cut connection -->
-		<path d={ghostCutPath} stroke="red" stroke-width="2" fill="none" />
+		<path d={ghostCutPath} stroke="{config.link.cut.color}" stroke-width="{config.link.cut.stroke_width}" fill="none" />
 	</svg>
   
 	{#if showCommandPalette}

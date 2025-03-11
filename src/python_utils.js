@@ -1,4 +1,45 @@
+import { get, set } from 'idb-keyval';
+// import { showDirectoryPicker } from 'fs-picker';
+
 let stdout = null;
+
+export async function mountDirectory() {
+    // Access idb-keyval methods from the global scope (via CDN)
+    // const { get, set } = window.idbKeyval;
+
+    let dirHandle;
+
+    // Try to retrieve the stored directory handle
+    dirHandle = await get('directoryHandle');
+
+    if (dirHandle) {
+        // Verify permissions are still granted
+        const permissionStatus = await dirHandle.queryPermission({ mode: 'readwrite' });
+        if (permissionStatus !== 'granted') {
+            // Request permission again if not granted
+            const newPermissionStatus = await dirHandle.requestPermission({ mode: 'readwrite' });
+            if (newPermissionStatus !== 'granted') {
+                dirHandle = null; // Permission denied, reset to prompt user
+            }
+        }
+    }
+
+    // If no valid handle exists, prompt the user
+    if (!dirHandle) {
+        dirHandle = await showDirectoryPicker();
+        const permissionStatus = await dirHandle.requestPermission({ mode: 'readwrite' });
+        if (permissionStatus !== 'granted') {
+            throw new Error('readwrite access to directory not granted');
+        }
+        // Save the handle to IndexedDB
+        await set('directoryHandle', dirHandle);
+    }
+
+    // Mount the directory in Pyodide
+    const nativefs = await window.pyodide.mountNativeFS('/user-data', dirHandle);
+    await nativefs.syncfs(); // Sync changes to the native filesystem
+    console.log('Directory mounted at /user-data');
+}
 
 export async function writeFileToFS( filename ) {
     const file_data = await (await fetch(`/${filename}`)).text();
@@ -21,9 +62,9 @@ export async function doLoadPyodide( handleStdOut ) {
     console.log("Installed uproot");
 
     // 1) Load engine.py from your server (or embed it directly)
-    const enginePy = await (await fetch('/engine.py')).text();
+    // const enginePy = await (await fetch('/engine.py')).text();
     // This executes the code in engine.py so that its functions become available in Pyodide
-    await pyodide.runPythonAsync(enginePy);
+    // await pyodide.runPythonAsync(enginePy);
 
     // handleStdOut("Writing python files to FS...");
     // writeFileToFS("engine.py");
