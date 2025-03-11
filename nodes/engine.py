@@ -3,11 +3,8 @@ from collections import defaultdict, deque
 
 def module_import_star(module_path):
     return f"import {module_path}"
-    # """Generate a star import statement for a module."""
-    # return f"import {module_path} as {module_path.replace('.', '_')}"
 
 def normalize_module_path(module_path):
-    """Normalize the module path to a standard format. Also strip ".py" extension."""
     if module_path.endswith(".py"):
         module_path = module_path[:-3]
     if module_path.startswith("./"):
@@ -15,7 +12,6 @@ def normalize_module_path(module_path):
     return module_path.replace("/", ".")
 
 def generate_python_script(json_data):
-    """Generate a Python script from a JSON structure with nodes and connections."""
     nodes = json_data['nodes']
     connections = json_data['connections']
     node_dict = {node['id']: node for node in nodes}
@@ -29,7 +25,7 @@ def generate_python_script(json_data):
         adj_list[from_node].append(to_node)
         incoming_degree[to_node] += 1
 
-    # Perform topological sort to determine execution order
+    # Topological sort
     queue = deque([nid for nid in incoming_degree if incoming_degree[nid] == 0])
     order = []
     while queue:
@@ -48,53 +44,61 @@ def generate_python_script(json_data):
         for conn in connections
     }
 
-    # Extract function definitions from source fields
+    # Extract function definitions and module dependencies
     dependency_modules = set()
     function_defs = []
     for node in nodes:
         if 'module' in node:
-            # import the module instead of making the source code inline
-            dependency_modules.add( normalize_module_path(node['module']) )
+            dependency_modules.add(normalize_module_path(node['module']))
             continue
         if 'source' not in node:
             continue
         function_defs.append(node['source'])
-        # function_defs = [node['source'] for node in nodes]
 
     # Generate execution lines
     execution_lines = []
     for node_id in order:
         node = node_dict[node_id]
         func_name = node['name']
-        # add the module to the function name if it exists
         if 'module' in node:
             func_name = f"{normalize_module_path(node['module'])}.{func_name}"
-        # Collect arguments for the function call
+
+        # Collect arguments
         args = []
         for input_spec in node['inputs']:
             input_name = input_spec['name']
             if (node_id, input_name) in connections_map:
-                # Input is connected; use the value from the connection
                 from_node, output_name = connections_map[(node_id, input_name)]
-                args.append(f"node_{from_node}_{output_name}")
+                if len(node_dict[from_node]['outputs']) == 1:
+                    args.append(f"node_{from_node}_{output_name}")
+                else:
+                    args.append(f"node_{from_node}_result['{output_name}']")
             elif input_spec['default'] is not None:
-                # No connection, but a default exists; use the default value
-                default_value = repr(input_spec['default'])  # Properly quote strings, etc.
+                default_value = repr(input_spec['default'])
                 args.append(default_value)
             else:
                 raise ValueError(f"Missing required input '{input_name}' for node {node_id}")
         arg_str = ', '.join(args)
         call = f"{func_name}({arg_str})"
+
+        # Assign return values based on output count
         if node['outputs']:
-            output_name = node['outputs'][0]['name']
-            output_var = f"node_{node_id}_{output_name}"
-            execution_lines.append(f"{output_var} = {call}")
+            if len(node['outputs']) == 1:
+                output_name = node['outputs'][0]['name']
+                output_var = f"node_{node_id}_{output_name}"
+                execution_lines.append(f"{output_var} = {call}")
+            else:
+                output_var = f"node_{node_id}_result"
+                execution_lines.append(f"{output_var} = {call}")
         else:
             execution_lines.append(call)
 
-    # Assemble the full script
+    # Assemble the script
     module_import_star_lines = [module_import_star(module) for module in dependency_modules]
-    script = "import sys\n\nsys.path.append('/user-data/')\n\n" + "\n\n".join(module_import_star_lines) + "\n\n".join(function_defs) + "\n\n" + "\n".join(
-        f"{line}" for line in execution_lines
+    script = (
+        "import sys\n\nsys.path.append('/user-data/')\n\n" +
+        "\n\n".join(module_import_star_lines) + "\n\n" +
+        "\n\n".join(function_defs) + "\n\n" +
+        "\n".join(execution_lines)
     )
     return script
