@@ -3,6 +3,7 @@ import inspect
 import importlib.util
 import sys
 from typing import TypedDict, get_type_hints, Tuple, Dict, get_origin, get_args
+import argparse
 
 def format_type(type_obj):
     """Convert type objects to clean string representations."""
@@ -94,14 +95,15 @@ def analyze_module_functions(module_path, output_dir=""):
             source_code = inspect.getsource(func).strip()
         except (OSError, TypeError) as e:
             source_code = f"Source code unavailable: {str(e)}"
-        
+
         # Create JSON structure
         function_json = {
             "name": func_name,
             "inputs": inputs,
             "outputs": outputs,
             "docstring": inspect.getdoc(func) or "",
-            "source": source_code
+            "source": source_code,
+            "module": module_path
         }
         
         # Write to JSON file
@@ -116,7 +118,13 @@ def analyze_module_functions(module_path, output_dir=""):
 # Example usage
 if __name__ == "__main__":
     try:
-        module_path = "example_functions.py"
+        parser = argparse.ArgumentParser(description="Convert python functions to node definitions")
+        # add argument for specifying the python file to analyze
+        parser.add_argument('file', help='Generate node defs from .py file')
+        args = parser.parse_args()
+        if not args.file.endswith('.py'):
+            raise ValueError("Input file must be a Python file")
+        module_path = args.file
         results = analyze_module_functions(module_path)
         for func_name, file_path in results.items():
             print(f"Generated JSON for {func_name} at {file_path}")

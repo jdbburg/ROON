@@ -7,6 +7,7 @@
 	import { checkCollision } from 'svg-path-intersections';
     // import PyodideTerm from './PyodideTerm.svelte';
     import PyodideRepl from './PyodideREPL.svelte';
+	import { runEngine } from './python_utils.js';
 
 	let pyodide; // Pyodide instance
 
@@ -266,158 +267,83 @@
 /* ---------------------------------------------------------------------------
 * GRAPH DATA (Nodes, Connections)
 * ------------------------------------------------------------------------- */
+	// let graphData = {
+	// 	nodes: [],
+	// 	connections: []
+	// };
 	let graphData = {
-    "nodes": [
+  "nodes": [
+    {
+      "name": "let",
+      "inputs": [
         {
-            "id": "1",
-            "name": "add_numbers",
-            "inputs": [
-                {
-                    "name": "a",
-                    "type": "number",
-                    "default": 5
-                },
-                {
-                    "name": "b",
-                    "type": "number",
-                    "default": 3
-                }
-            ],
-            "outputs": [
-                {
-                    "name": "result",
-                    "type": "number"
-                }
-            ],
-            "position": {
-                "x": 100,
-                "y": 150
-            }
-        },
-        {
-            "id": "2",
-            "name": "print_result",
-            "inputs": [
-                {
-                    "name": "value",
-                    "type": "number",
-                    "default": null
-                }
-            ],
-            "outputs": [],
-            "position": {
-                "x": 487.7523990599577,
-                "y": 204.72011966538503
-            }
-        },
-        {
-            "name": "open_root_file",
-            "inputs": [
-                {
-                    "name": "path",
-                    "type": "str",
-                    "default": "example.root",
-                    "kind": "POSITIONAL_OR_KEYWORD"
-                }
-            ],
-            "outputs": [
-                {
-                    "name": "file",
-                    "type": "uproot.reading.ReadOnlyDirectory"
-                },
-                {
-                    "name": "keys",
-                    "type": "list[str]"
-                },
-                {
-                    "name": "view",
-                    "type": "str"
-                }
-            ],
-            "docstring": "Facility for text visualization.",
-            "source": "def open_root_file(path: str = \"example.root\") -> RootFileResult:\n    \"\"\"Facility for text visualization.\"\"\"\n    f = uproot.open(path)\n    view = json.dumps(f.classnames(), indent=4)\n    return {\n        'file': f,\n        'keys': f.keys(),\n        'view': view,\n    }",
-            "id": "3",
-            "position": {
-                "x": 657.1297880062386,
-                "y": 4.21793756957652
-            }
-        },
-        {
-            "name": "calculate_total",
-            "inputs": [
-                {
-                    "name": "price",
-                    "type": "float",
-                    "default": null,
-                    "kind": "POSITIONAL_OR_KEYWORD"
-                },
-                {
-                    "name": "quantity",
-                    "type": "int",
-                    "default": "1",
-                    "kind": "POSITIONAL_OR_KEYWORD"
-                },
-                {
-                    "name": "tax_rate",
-                    "type": "float",
-                    "default": "0.1",
-                    "kind": "POSITIONAL_OR_KEYWORD"
-                }
-            ],
-            "outputs": [
-                {
-                    "name": "return_value",
-                    "type": "float"
-                }
-            ],
-            "docstring": "Calculate the total cost including tax.\n\nArgs:\n    price: Base price of the item\n    quantity: Number of items\n    tax_rate: Tax rate as a decimal",
-            "source": "def calculate_total(price: float, quantity: int = 1, tax_rate: float = 0.1) -> float:\n    \"\"\"\n    Calculate the total cost including tax.\n    \n    Args:\n        price: Base price of the item\n        quantity: Number of items\n        tax_rate: Tax rate as a decimal\n    \"\"\"\n    subtotal = price * quantity\n    tax = subtotal * tax_rate\n    return subtotal + tax",
-            "id": "4",
-            "position": {
-                "x": 607.3928812326479,
-                "y": 448.7565066724061
-            }
+          "name": "v",
+          "type": "any",
+          "default": "Hello from Pyodide!",
+          "kind": "POSITIONAL_OR_KEYWORD"
         }
-    ],
-    "connections": [
+      ],
+      "outputs": [
         {
-            "from": {
-                "node": "1",
-                "output": "result"
-            },
-            "to": {
-                "node": "2",
-                "input": "value"
-            }
-        },
-        {
-            "from": {
-                "node": "1",
-                "output": "result"
-            },
-            "to": {
-                "node": "3",
-                "input": "path"
-            }
-        },
-        {
-            "from": {
-                "node": "1",
-                "output": "result"
-            },
-            "to": {
-                "node": "4",
-                "input": "quantity"
-            }
+          "name": "return_value",
+          "type": "any"
         }
-    ]
-	};
+      ],
+      "docstring": "",
+      "source": "def let( v ):\n    return v",
+      "module": "example_functions.py",
+      "id": "1",
+      "position": {
+        "x": 100,
+        "y": 100
+      }
+    },
+    {
+      "name": "print_node",
+      "inputs": [
+        {
+          "name": "v",
+          "type": "any",
+          "default": null,
+          "kind": "POSITIONAL_OR_KEYWORD"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "return_value",
+          "type": "any"
+        }
+      ],
+      "docstring": "",
+      "source": "def print_node( v ):\n    print(v)",
+      "module": "example_functions.py",
+      "id": "2",
+      "position": {
+        "x": 498.79550086356505,
+        "y": 151.42692364743164
+      }
+    }
+  ],
+  "connections": [
+    {
+      "from": {
+        "node": "1",
+        "output": "return_value"
+      },
+      "to": {
+        "node": "2",
+        "input": "v"
+      }
+    }
+  ]
+};
 
 
 	// Whenever graphData changes, assign it to window.graphData so the console sees the latest state.
 	// ONLY for DEBUGGING, remove this line in production!
 	$: window.graphData = graphData;
-  
+	let selectedNodeId = null;
+
 /* ---------------------------------------------------------------------------
 * COMMAND PALETTE
 * ------------------------------------------------------------------------- */
@@ -432,78 +358,29 @@
 		{ name: 'New Graph', callable: () => { graphData.nodes = []; graphData.connections = []; }},
 		{ name: 'Undo', callable: undo },
 		{ name: 'Redo', callable: redo },
+		{ name: 'Save Image', callable: saveAsSVG },
 	];
 
-	async function runEngine( graphDataCopy ) {
-        // 1) Load engine.py from your server (or embed it directly)
-        // const enginePy = await (await fetch('/engine.py')).text();
-        // This executes the code in engine.py so that its functions become available in Pyodide
-        let pyodide = window.pyodide;
-		// await pyodide.runPythonAsync(enginePy);
 
-		
-        // 2) Convert graphData to a JSON string for Python
-        const graphJson = JSON.stringify(graphDataCopy);
-
-		// 2a) Escape backslashes and double quotes in that JSON string
-		const escapedGraphJson = graphJson
-			.replace(/\\/g, '\\\\')  // escape all backslashes
-			.replace(/"/g, '\\"');   // escape all double quotes
-
-        // 3) Build a Python snippet that:
-        //    - Imports json and engine
-        //    - Parses graphJson
-        //    - Calls the evaluate function
-        //    - Returns the result as a JSON string
-        const pythonCode = `
-import json
-
-
-# Convert the string into a Python dict
-graph_dict = json.loads("""${escapedGraphJson}""")
-
-# Evaluate using your DAG logic in engine.py
-result = generate_python_script(graph_dict)
-
-# Return the result as JSON so Pyodide can hand it back
-json.dumps(result)
-`;
-
-        // 4) Run the Python code
-		console.log('Running engine...');
-		console.log('Python code:', pythonCode);
-        const output = await pyodide.runPythonAsync(pythonCode);
-
-        // output is whatever the last expression returns, so we have a JSON string
-        console.log('Engine raw output:\n', output);
-
-		// assuming that worked...
-		
-		// pyodide.setStdout({ batched: 
-        //   (output) => {
-        //       console.log("STDOUT GEN: ", output);
-        //     //   outputLines = [...outputLines, output];
-        //     }
-        //   }
-        //   );
-		try {
-			await pyodide.runPythonAsync( output );
-			console.log("Run generated script complete");
-		}  catch (err) {
-			console.error("Error running generated script:", err);
-
-		}
-		console.log("Running Engine Complete");
-		
-		// console.log('Generated Script Output:', generated_script_output );
-
-		// console.log("PRINTED: ", printed);
-        // 5) Parse the returned JSON in JavaScript
-        // const parsed = JSON.parse(output);
-        // console.log('Parsed DAG evaluation result:', parsed);
-
-        // Now `parsed` is a JS object with your DAG outputs.
-    }
+	function saveAsSVG() {
+		// Replace 'mySvg' with the ID of your SVG element
+		const svgElement = document.getElementById('mySvg');
+		// Serialize the SVG to a string
+		const svgData = new XMLSerializer().serializeToString(svgElement);
+		// Create a Blob with the SVG data
+		const blob = new Blob([svgData], { type: 'image/svg+xml' });
+		// Generate a URL for the Blob
+		const url = URL.createObjectURL(blob);
+		// Create an anchor element for downloading
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = 'graph.svg'; // Set the default filename
+		document.body.appendChild(a);
+		a.click();
+		// Clean up
+		document.body.removeChild(a);
+		URL.revokeObjectURL(url);
+	}
 
 	function saveGraphAsJSON() {
 		const data = {
@@ -531,8 +408,6 @@ json.dumps(result)
       }
 	}
 
-	let selectedNodeId = null;
-  
 	function handleCommand(cmd) {
 		if (cmd.callable && typeof cmd.callable === 'function') {
 			cmd.callable();
@@ -800,6 +675,18 @@ json.dumps(result)
   
 	// WASD panning + +/- zoom
 	function handleKeyDown(e) {
+		if ( e.key === 'Escape' ) {
+			selectedNodeId = null;
+			// remove focus from inputs
+			document.activeElement.blur();
+
+			let mpl = document.getElementById('MPL-container');
+			// hide the mpl container
+			mpl.style.display = "none";
+
+
+		}
+		if (e.target.tagName === 'INPUT') return;
 	  // For panning, we move camera in graph coords
 	  // e.g. pressing W => cameraY -= some offset
 	  	if (!showCommandPalette) {
@@ -817,7 +704,6 @@ json.dumps(result)
 				handleCameraZoom(-1);
 			} else if (e.key === 'h' || e.key === 'H') {
 				// highlightPointer = !highlightPointer;
-				
 				cameraX = 0;
 				cameraY = 0;
 				scale = 0.5;
@@ -830,6 +716,10 @@ json.dumps(result)
 				redo();
 			} else if ( e.key === 'Escape' ) {
 				selectedNodeId = null;
+				// remove focus from inputs
+				document.activeElement.blur();
+			} else if ( e.shiftKey && e.key === 'Enter' ) {
+				runEngine( graphData );
 			}
 
 		}
@@ -936,14 +826,7 @@ json.dumps(result)
 	on:mouseup={handleMouseUp}
 	on:wheel|preventDefault={handleWheel}
   >
-  <!-- <script>
-	async function doLoadPyodide() {
-		const pyodide = await window.loadPyodide();
-		window.pyodide = pyodide;
-	  return pyodide;
-	}
-	doLoadPyodide();
-  </script> -->
+
   	<!-- Hidden file input for loading JSON -->
 	<input
 	type="file"
@@ -967,6 +850,7 @@ json.dumps(result)
 	  We bind a ref to measure its size. 
 	-->
 	<svg
+	  id="mySvg"
 	  bind:this={svgRef}
 	  width="100%"
 	  height="100%"	
@@ -1006,9 +890,7 @@ json.dumps(result)
 		{/if}
 
 		<!-- Ghost path for the in-progress cut connection -->
-		<!-- {#if activeCutConnection} -->
 		<path d={ghostCutPath} stroke="red" stroke-width="2" fill="none" />
-		<!-- {/if} -->
 	</svg>
   
 	{#if showCommandPalette}
@@ -1019,3 +901,6 @@ json.dumps(result)
 	<!-- <PyodideTerm /> -->
 </div>
 <PyodideRepl {pyodide} />
+<div>
+	<div id="MPL-container" style="position:absolute; top:0;"></div>
+</div>

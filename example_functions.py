@@ -15,6 +15,7 @@ def get_coordinates(x: int, y: int) -> tuple[int, int]:
     """Returns a coordinate pair"""
     return (x, y)
 
+
 import uproot
 import json
 
