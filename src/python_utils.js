@@ -1,9 +1,12 @@
+let stdout = null;
+
 export async function writeFileToFS( filename ) {
     const file_data = await (await fetch(`/${filename}`)).text();
     pyodide.FS.writeFile(`/${filename}`, file_data, { encoding: "utf8" });
 }
 
 export async function doLoadPyodide( handleStdOut ) {
+    stdout = handleStdOut;
     handleStdOut("Setting up Pyodide...");
     let pyodide = await window.loadPyodide();
     await pyodide.loadPackage("micropip");
@@ -22,9 +25,14 @@ export async function doLoadPyodide( handleStdOut ) {
     // This executes the code in engine.py so that its functions become available in Pyodide
     await pyodide.runPythonAsync(enginePy);
 
-    writeFileToFS("engine.py");
-    writeFileToFS("example_functions.py");
-    writeFileToFS("matplotlib_nodes.py");
+    // handleStdOut("Writing python files to FS...");
+    // writeFileToFS("engine.py");
+    // writeFileToFS("example_functions.py");
+    // writeFileToFS("matplotlib_nodes.py");
+    // writeFileToFS("uproot_nodes.py");
+
+    // handleStdOut("Writing example data to FS...");
+    // writeFileToFS("example.root");
 
     document.pyodideMplTarget = document.getElementById('MPL-container');
 
@@ -36,15 +44,18 @@ export async function doLoadPyodide( handleStdOut ) {
   return pyodide;
 }
 
-export async function runEngine( graphData ) {
-    // 1) Load engine.py from your server (or embed it directly)
-    
-    // This executes the code in engine.py so that its functions become available in Pyodide
+export async function runEngine( graphData, execute = true ) {
+    // alias our window level pyodide instance
     let pyodide = window.pyodide;
-    
 
-    
+    // 1) Create a Python namespace that contains the graph data
+    // this is the cleanest way to pass data between JS and Python
     let graph_namespace = pyodide.toPy( { graphData: graphData } );
+
+    // 2) Load engine.py from your server (or embed it directly)
+    // const enginePy = await (await fetch('/engine.py')).text();
+    // This executes the code in engine.py so that its functions become available in Pyodide
+    // await pyodide.runPythonAsync(enginePy, { globals: graph_namespace });
 
     // 3) Build a Python snippet that:
     //    - Imports json and engine
@@ -53,27 +64,28 @@ export async function runEngine( graphData ) {
     //    - Returns the result as a JSON string
     const pythonCode = `
 import json
-
-# Convert the string into a Python dict
-#graph_dict = json.loads( graphData )
+import sys
+sys.path.append('/user-data/')
+import engine
 
 # Evaluate using your DAG logic in engine.py
-script_source = generate_python_script(graphData)
+script_source = engine.generate_python_script(graphData)
 script_source
 `;
 
-    const enginePy = await (await fetch('/engine.py')).text();
-    await pyodide.runPythonAsync(enginePy, { globals: graph_namespace });
-
     // 4) Run the Python code
     console.log('Running engine...');
-    console.log('Python code:', pythonCode);
+    console.debug('Python code:', pythonCode);
     const output = pyodide.runPython(pythonCode, { globals: graph_namespace });
 
     // output is whatever the last expression returns, so we have a JSON string
-    console.log('Engine raw output:\n', output);
+    console.debug('Engine raw output:\n', output);
 
+    if (!execute) {
+        return output;
+    }
     await runrun( output );
+    return output;
 }
 
 async function runrun( script ){
@@ -87,6 +99,7 @@ async function runrun( script ){
         console.log("Run generated script complete:", output);
     }  catch (err) {
         console.error("Error running generated script:", String(err) );
+        stdout( String(err) );
 
     }
     console.log("Running Engine Complete");

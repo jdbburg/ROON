@@ -91,7 +91,7 @@
         {socket.name}
     </text>
 
-    {#if (socketFlow == "input" && showWidgets)}
+    {#if (socketFlow == "input" && showWidgets && socket.default !== undefined)}
     <foreignObject
         x="17"
         y={20 + index * 25}

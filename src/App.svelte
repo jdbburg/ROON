@@ -267,76 +267,76 @@
 /* ---------------------------------------------------------------------------
 * GRAPH DATA (Nodes, Connections)
 * ------------------------------------------------------------------------- */
-	// let graphData = {
-	// 	nodes: [],
-	// 	connections: []
-	// };
 	let graphData = {
-  "nodes": [
-    {
-      "name": "let",
-      "inputs": [
-        {
-          "name": "v",
-          "type": "any",
-          "default": "Hello from Pyodide!",
-          "kind": "POSITIONAL_OR_KEYWORD"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "return_value",
-          "type": "any"
-        }
-      ],
-      "docstring": "",
-      "source": "def let( v ):\n    return v",
-      "module": "example_functions.py",
-      "id": "1",
-      "position": {
-        "x": 100,
-        "y": 100
-      }
-    },
-    {
-      "name": "print_node",
-      "inputs": [
-        {
-          "name": "v",
-          "type": "any",
-          "default": null,
-          "kind": "POSITIONAL_OR_KEYWORD"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "return_value",
-          "type": "any"
-        }
-      ],
-      "docstring": "",
-      "source": "def print_node( v ):\n    print(v)",
-      "module": "example_functions.py",
-      "id": "2",
-      "position": {
-        "x": 498.79550086356505,
-        "y": 151.42692364743164
-      }
-    }
-  ],
-  "connections": [
-    {
-      "from": {
-        "node": "1",
-        "output": "return_value"
-      },
-      "to": {
-        "node": "2",
-        "input": "v"
-      }
-    }
-  ]
-};
+		nodes: [],
+		connections: []
+	};
+	// let graphData = {
+	// "nodes": [
+	// 	{
+	// 	"name": "let",
+	// 	"inputs": [
+	// 		{
+	// 		"name": "v",
+	// 		"type": "any",
+	// 		"default": "Hello from Pyodide!",
+	// 		"kind": "POSITIONAL_OR_KEYWORD"
+	// 		}
+	// 	],
+	// 	"outputs": [
+	// 		{
+	// 		"name": "return_value",
+	// 		"type": "any"
+	// 		}
+	// 	],
+	// 	"docstring": "",
+	// 	"source": "def let( v ):\n    return v",
+	// 	"module": "example_functions.py",
+	// 	"id": "1",
+	// 	"position": {
+	// 		"x": 100,
+	// 		"y": 100
+	// 	}
+	// 	},
+	// 	{
+	// 	"name": "print_node",
+	// 	"inputs": [
+	// 		{
+	// 		"name": "v",
+	// 		"type": "any",
+	// 		"default": null,
+	// 		"kind": "POSITIONAL_OR_KEYWORD"
+	// 		}
+	// 	],
+	// 	"outputs": [
+	// 		{
+	// 		"name": "return_value",
+	// 		"type": "any"
+	// 		}
+	// 	],
+	// 	"docstring": "",
+	// 	"source": "def print_node( v ):\n    print(v)",
+	// 	"module": "example_functions.py",
+	// 	"id": "2",
+	// 	"position": {
+	// 		"x": 498.79550086356505,
+	// 		"y": 151.42692364743164
+	// 	}
+	// 	}
+	// ],
+	// "connections": [
+	// 	{
+	// 	"from": {
+	// 		"node": "1",
+	// 		"output": "return_value"
+	// 	},
+	// 	"to": {
+	// 		"node": "2",
+	// 		"input": "v"
+	// 	}
+	// 	}
+	// ]
+	// };
 
 
 	// Whenever graphData changes, assign it to window.graphData so the console sees the latest state.
@@ -359,8 +359,37 @@
 		{ name: 'Undo', callable: undo },
 		{ name: 'Redo', callable: redo },
 		{ name: 'Save Image', callable: saveAsSVG },
+		{ name: 'setup fs', callable: () => { setupFS();} },
+		{ name: 'Generate Python Script', callable: generateScriptAndSave}
 	];
 
+	async function generateScriptAndSave() {
+		let generated_script = await runEngine( graphData, false );
+		// download the script as generated.py
+		const blob = new Blob([generated_script], { type: 'text/plain' });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = 'generated.py';
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+		URL.revokeObjectURL(url);
+
+	}
+	async function setupFS() {
+		const dirHandle = await showDirectoryPicker();
+		const permissionStatus = await dirHandle.requestPermission({
+			mode: "readwrite",
+			});
+
+		if (permissionStatus !== "granted") {
+			throw new Error("readwrite access to directory not granted");
+		}
+
+		const nativefs = await window.pyodide.mountNativeFS("/user-data", dirHandle);
+		await nativefs.syncfs();
+	}
 
 	function saveAsSVG() {
 		// Replace 'mySvg' with the ID of your SVG element
@@ -572,14 +601,8 @@
 	  
 	const ZOOM_FACTOR = 0.1; // 10% zoom per wheel event
 
-	async function setup(){
-        let pyodide = await loadPyodide();
-        console.log(pyodide.runPython("1 + 2"));
-      }
 	onMount(() => {
 	  window.addEventListener('keydown', handleKeyDown);
-	//   setup();
-
 	  return () => window.removeEventListener('keydown', handleKeyDown);
 	});
   
@@ -615,6 +638,8 @@
 			selectedNodeId = null;
 			mouseGraphCoords = startGraphCoords = screenToGraphCoords(e.clientX, e.clientY);
 			activeCutConnection = true;
+			// unfocus
+			document.activeElement.blur();
 		}
 	}
   
