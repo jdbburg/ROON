@@ -7,10 +7,17 @@
 	import { checkCollision } from 'svg-path-intersections';
     // import PyodideTerm from './PyodideTerm.svelte';
     import PyodideRepl from './PyodideREPL.svelte';
-	import { runEngine, mountDirectory } from './python_utils.js';
+	import { runEngine, mountDirectory, stdout, runPython2JSON } from './python_utils.js';
     import { config } from './CONF';
+	import CodeEditor from './CodeEditor.svelte';
 
 	let pyodide; // Pyodide instance
+	let code = `def add(a, b):\n    return a + b\n\nadd(1, 2)`;
+
+	function handleCodeChange( newCode ) {
+		code = newCode;
+		console.log( "Code: ", code );
+	}
 
 	// some debug stuff
 	let highlightPointer = false;
@@ -272,73 +279,6 @@
 		nodes: [],
 		connections: []
 	};
-	// let graphData = {
-	// "nodes": [
-	// 	{
-	// 	"name": "let",
-	// 	"inputs": [
-	// 		{
-	// 		"name": "v",
-	// 		"type": "any",
-	// 		"default": "Hello from Pyodide!",
-	// 		"kind": "POSITIONAL_OR_KEYWORD"
-	// 		}
-	// 	],
-	// 	"outputs": [
-	// 		{
-	// 		"name": "return_value",
-	// 		"type": "any"
-	// 		}
-	// 	],
-	// 	"docstring": "",
-	// 	"source": "def let( v ):\n    return v",
-	// 	"module": "example_functions.py",
-	// 	"id": "1",
-	// 	"position": {
-	// 		"x": 100,
-	// 		"y": 100
-	// 	}
-	// 	},
-	// 	{
-	// 	"name": "print_node",
-	// 	"inputs": [
-	// 		{
-	// 		"name": "v",
-	// 		"type": "any",
-	// 		"default": null,
-	// 		"kind": "POSITIONAL_OR_KEYWORD"
-	// 		}
-	// 	],
-	// 	"outputs": [
-	// 		{
-	// 		"name": "return_value",
-	// 		"type": "any"
-	// 		}
-	// 	],
-	// 	"docstring": "",
-	// 	"source": "def print_node( v ):\n    print(v)",
-	// 	"module": "example_functions.py",
-	// 	"id": "2",
-	// 	"position": {
-	// 		"x": 498.79550086356505,
-	// 		"y": 151.42692364743164
-	// 	}
-	// 	}
-	// ],
-	// "connections": [
-	// 	{
-	// 	"from": {
-	// 		"node": "1",
-	// 		"output": "return_value"
-	// 	},
-	// 	"to": {
-	// 		"node": "2",
-	// 		"input": "v"
-	// 	}
-	// 	}
-	// ]
-	// };
-
 
 	// Whenever graphData changes, assign it to window.graphData so the console sees the latest state.
 	// ONLY for DEBUGGING, remove this line in production!
@@ -361,11 +301,38 @@
 		{ name: 'Redo', callable: redo },
 		{ name: 'Save Image', callable: saveAsSVG },
 		{ name: 'setup fs', callable: mountDirectory },
-		{ name: 'Generate Python Script', callable: generateScriptAndSave}
+		{ name: 'Generate Python Script', callable: generateScriptAndSave},
+		{ name: 'Py2Nodes', callable: () => { loadNodesFromPythonSource() } }
 	];
 
+	async function loadNodesFromPythonSource(){
+		//  open a file picker to choose the python file
+		const file = await window.showOpenFilePicker();
+		const fileHandle = file[0];
+		// get file path
+		const path = fileHandle.name;
+		console.log("path", path);
+
+		// let path = "/user-data/example_functions.py";
+		// get just the file name
+		let fileName = path.split('/').pop();
+		
+		// let fileExtension = fileName.split('.').pop();, we could check for .py?
+		let node_defs = await runPython2JSON( `/user-data/${path}` );
+
+		if (node_defs) {
+			for (const name in node_defs) {
+				let def = JSON.parse(node_defs[name]);
+				// delete the def.id so that a new id is assigned when the node is added
+				delete def.id;
+				commands.push( { name: fileName.slice( 0, -3) + ": " + name + "  (n)" , callable: () => { addNodeToGraph(def); } } );
+				stdout( `Node Added: ${name}` );
+			}
+		}
+	}
+
 	async function generateScriptAndSave() {
-		let generated_script = await runEngine( graphData, false );
+		let generated_script = await runEngine( graphData, false );	
 		// download the script as generated.py
 		const blob = new Blob([generated_script], { type: 'text/plain' });
 		const url = URL.createObjectURL(blob);
@@ -514,14 +481,19 @@
 
 	// Helper: add a node definition to the graph, auto-assign ID if missing
 	function addNodeToGraph(nodeDef) {
-		console.log(nodeDef);
+		console.log("AddNodeToGraph (preId):", nodeDef);
 		// If the nodeDef doesn't have an id, generate one
-		if (!nodeDef.id) {
+		// if (!nodeDef.id) {
 			nodeDef.id = (graphData.nodes.length + 1).toString();
-		}
+		// }
+		console.log("AddNodeToGraph (postId):", nodeDef);
+
 		// If there's no position, default it somewhere
 		if (!nodeDef.position) {
-			nodeDef.position = { x: 100, y: 100 };
+			// get the current mouse position in graph coordinates
+			// nodeDef.position = { x: mouseX, y: mouseY };
+			nodeDef.position = screenToGraphCoords(mouseX, mouseY);
+			// nodeDef.position = { x: 100, y: 100 };
 		}
 		// Merge it into the array
 		graphData.nodes = [...graphData.nodes, nodeDef];
@@ -699,6 +671,8 @@
 
 		}
 		if (e.target.tagName === 'INPUT') return;
+		if (e.target.tagName !== 'BODY') return;
+		
 	  // For panning, we move camera in graph coords
 	  // e.g. pressing W => cameraY -= some offset
 	  	if (!showCommandPalette) {
@@ -912,6 +886,7 @@
 	{/if}
 	<!-- <PyodideTerm /> -->
 </div>
+<!-- <CodeEditor value={code} onChange={handleCodeChange} /> -->
 <PyodideRepl {pyodide} />
 <div>
 	<div id="MPL-container" style="position:absolute; top:0;"></div>

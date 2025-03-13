@@ -1,7 +1,9 @@
 import { get, set } from 'idb-keyval';
 // import { showDirectoryPicker } from 'fs-picker';
 
-let stdout = null;
+export let stdout = null;
+// I tried to add this to keep the script context available in the REPL, but not working
+export let lastNamespace = null;
 
 export async function mountDirectory() {
     // Access idb-keyval methods from the global scope (via CDN)
@@ -49,31 +51,19 @@ export async function writeFileToFS( filename ) {
 export async function doLoadPyodide( handleStdOut ) {
     stdout = handleStdOut;
     handleStdOut("Setting up Pyodide...");
-    let pyodide = await window.loadPyodide();
-    await pyodide.loadPackage("micropip");
+    let pyodide = await window.loadPyodide({
+        packages: ['micropip', 'numpy', 'matplotlib']
+    });
+    
     const micropip = pyodide.pyimport("micropip");
-    await micropip.install('numpy');
-    console.log("Installed numpy");
+    
     await micropip.install('awkward');
     console.log("Installed awkward");
-    await micropip.install('matplotlib');
-    console.log("Installed matplotlib");
+    handleStdOut("Installed awkward");
+
     await micropip.install('uproot');
     console.log("Installed uproot");
-
-    // 1) Load engine.py from your server (or embed it directly)
-    // const enginePy = await (await fetch('/engine.py')).text();
-    // This executes the code in engine.py so that its functions become available in Pyodide
-    // await pyodide.runPythonAsync(enginePy);
-
-    // handleStdOut("Writing python files to FS...");
-    // writeFileToFS("engine.py");
-    // writeFileToFS("example_functions.py");
-    // writeFileToFS("matplotlib_nodes.py");
-    // writeFileToFS("uproot_nodes.py");
-
-    // handleStdOut("Writing example data to FS...");
-    // writeFileToFS("example.root");
+    handleStdOut("Installed uproot");
 
     document.pyodideMplTarget = document.getElementById('MPL-container');
 
@@ -81,8 +71,44 @@ export async function doLoadPyodide( handleStdOut ) {
     pyodide.setStderr({ batched: handleStdOut });
     
     window.pyodide = pyodide;
+    pyodide.setDebug(true);
     handleStdOut("Pyodide done loading");
   return pyodide;
+}
+
+export async function runPython2JSON( module_path) {
+    let pyodide = window.pyodide;
+
+    let namespace = pyodide.toPy( {  } );
+    const pythonCode = `
+import json
+import sys
+sys.path.append('/user-data/')
+import allpy2json
+
+script_source = "Running allpy2json..."
+#print("Running allpy2json...")
+# Evaluate using your DAG logic in engine.py
+script_source = allpy2json.analyze_module_functions( "${module_path}", None, "/user-data/" )
+#print(script_source)
+json.dumps(script_source)
+`;
+
+    let output = null;
+    try {
+        output = await pyodide.runPythonAsync(pythonCode, { globals: namespace });
+        console.log("JSON Output:", output);
+        if (output !== undefined) {
+            console.log( JSON.parse(output)) ;
+            return JSON.parse(output);
+        }
+           
+    }
+    catch (err) {
+        console.error("Error running engine:", String(err) );
+        stdout( String(err) );
+    }
+    return output;
 }
 
 export async function runEngine( graphData, execute = true ) {
@@ -117,7 +143,15 @@ script_source
     // 4) Run the Python code
     console.log('Running engine...');
     console.debug('Python code:', pythonCode);
-    const output = pyodide.runPython(pythonCode, { globals: graph_namespace });
+    let output = null;
+    try {
+        output = pyodide.runPython(pythonCode, { globals: graph_namespace });
+    }
+    catch (err) {
+        console.error("Error running engine:", String(err) );
+        stdout( String(err) );
+    }
+    // const output = pyodide.runPython(pythonCode, { globals: graph_namespace });
 
     // output is whatever the last expression returns, so we have a JSON string
     console.debug('Engine raw output:\n', output);
@@ -132,11 +166,11 @@ script_source
 async function runrun( script ){
     console.log("Running Running...");
     let pyodide = window.pyodide;
-    let graph_namespace = pyodide.toPy( { graphData: graphData } );
+    lastNamespace = pyodide.toPy( { graphData: graphData } );
     try {
         let source = script
         console.log("Running generated script...:", source );
-        let output = pyodide.runPython( source );
+        let output = pyodide.runPython( source, { globals: lastNamespace } );
         console.log("Run generated script complete:", output);
     }  catch (err) {
         console.error("Error running generated script:", String(err) );
@@ -147,4 +181,8 @@ async function runrun( script ){
     let mpl = document.getElementById('MPL-container');
     // hide the mpl container
     mpl.style.display = "block";
+}
+
+export function generateNodeDefs( name ){
+
 }
