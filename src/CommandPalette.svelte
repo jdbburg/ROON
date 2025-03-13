@@ -1,6 +1,6 @@
 <script>
     import { createEventDispatcher } from 'svelte';
-  
+
     export let commands = [];
     const dispatch = createEventDispatcher();
     let searchTerm = "";
@@ -61,7 +61,7 @@
       background: white;
       border-radius: 5px;
       padding: 10px;
-      width: 300px;
+      width: 50%;
       box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     }
     input {

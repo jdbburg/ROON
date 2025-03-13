@@ -1,23 +1,30 @@
 <script>
     import { onMount } from "svelte";
-    import { doLoadPyodide, mountDirectory } from "./python_utils.js";
+    import { doLoadPyodide, mountDirectory, lastNamespace } from "./python_utils.js";
+    import CodeEditor from "./CodeEditor.svelte";
 
     export let pyodide; // the Pyodide instance passed from the parent
-  
+    let pythonCode = `print("Hello, Pyodide!")`;
+
+    function handleCodeChange(newCode) {
+        // code = newCode;
+    }
+
     // State for the REPL
     let userInput = "";
     let outputLines = [];
 
     // Execute the entered code on pressing Enter
-    async function handleEnter() {
-        console.log("handleEnter");
+    async function handleEnter(v) {
+        console.log("handleEnter, code=", v);
       if (!pyodide) {
         console.error("Pyodide not loaded yet");
         return;
       }
-      const code = userInput;
+      // const code = userInput;
       userInput = "";  // clear the input
-  
+      let code = v;
+
       try {
         let result = await pyodide.runPythonAsync(code);
         if (result === undefined) {
@@ -51,7 +58,8 @@
       bottom: 0;
       left: 0;
       right: 0;
-      height: 200px;
+      height: 23em;
+      max-height: 25%;
       background-color: #222;
       color: #eee;
       display: flex;
@@ -74,11 +82,11 @@
   
     .input-area {
       border-top: 1px solid #555;
-      padding: 5px;
-      background: #333;
+      padding-bottom: 5px;
+      /* background: #333; */
     }
   
-    input {
+    /* input {
       width: 100%;
       border: none;
       background: #333;
@@ -87,7 +95,7 @@
       font-size: 14px;
       padding: 3px;
       outline: none;
-    }
+    } */
   </style>
   
   <div class="repl">
@@ -98,9 +106,11 @@
       {/each}
     </div>
   
+    
     <!-- Single-line input for Python commands -->
     <div class="input-area">
-      <input
+      
+      <!-- <input
         type="text"
         bind:value={userInput}
         on:keydown={(e) => {
@@ -109,6 +119,8 @@
           }
         }}
         placeholder="Type Python code and press Enter..."
-      />
+      /> -->
+
+      <CodeEditor value={pythonCode} onChange={handleCodeChange} onShiftEnter={handleEnter} immediateMode={true}/>
     </div>
   </div>
