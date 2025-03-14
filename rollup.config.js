@@ -3,9 +3,14 @@ import svelte from 'rollup-plugin-svelte';
 import commonjs from '@rollup/plugin-commonjs';
 import terser from '@rollup/plugin-terser';
 import resolve from '@rollup/plugin-node-resolve';
+import replace from '@rollup/plugin-replace';
 import livereload from 'rollup-plugin-livereload';
 import css from 'rollup-plugin-css-only';
 import typescript from '@rollup/plugin-typescript';
+import { config } from 'dotenv';
+
+// Load .env file (optional)
+config();
 
 const production = !process.env.ROLLUP_WATCH;
 
@@ -58,6 +63,12 @@ export default {
 			browser: true,
 			dedupe: ['svelte'],
 			exportConditions: ['svelte']
+		}),
+		replace({
+			preventAssignment: true,
+			values: {
+			  'process.env.PYTHON_BACKEND': JSON.stringify(process.env.PYTHON_BACKEND || 'auto'),
+			}
 		}),
 		commonjs(),
 		typescript({ // Add TypeScript plugin

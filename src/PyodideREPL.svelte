@@ -1,7 +1,9 @@
 <script>
-    import { onMount } from "svelte";
-    import { doLoadPyodide, mountDirectory, lastNamespace } from "./python_utils.js";
+    import { onMount, createEventDispatcher } from "svelte";
+    import { doLoadPyodide, mountDirectory, lastNamespace, generic_python_runner, stdout } from "./python_utils.js";
     import CodeEditor from "./CodeEditor.svelte";
+
+    const dispatch = createEventDispatcher();
 
     export let pyodide; // the Pyodide instance passed from the parent
     let pythonCode = `print("Hello, Pyodide!")`;
@@ -16,9 +18,12 @@
 
     // Execute the entered code on pressing Enter
     async function handleEnter(v) {
+      if ( window.pywebview ) {
+        // stdout( " USING PYWEBVIEW ");
+      }
         console.log("handleEnter, code=", v);
-      if (!pyodide) {
-        console.error("Pyodide not loaded yet");
+      if (!pyodide && !window.pywebview) {
+        console.error("Pyodide not loaded yet and python not ready");
         return;
       }
       // const code = userInput;
@@ -26,7 +31,8 @@
       let code = v;
 
       try {
-        let result = await pyodide.runPythonAsync(code);
+        // let result = await pyodide.runPythonAsync(code);
+        let result = await generic_python_runner(code, {})
         if (result === undefined) {
             result = "";
         }
@@ -44,9 +50,15 @@
     }
 
     onMount(async () => {
-        console.log("PyodideREPL onMount");
         pyodide = await doLoadPyodide( handleStdOut );
-        mountDirectory(pyodide);
+        if ( window.pywebview ) {
+          stdout( "nvm, we are native");
+          dispatch("pythonReady");
+          dispatch("pyodideLoaded");
+        } else {
+          await mountDirectory(pyodide);
+          dispatch("pyodideLoaded");
+        }
     });
   </script>
   

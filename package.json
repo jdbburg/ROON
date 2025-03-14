@@ -11,12 +11,14 @@
   "devDependencies": {
     "@rollup/plugin-commonjs": "^24.0.0",
     "@rollup/plugin-node-resolve": "^15.0.0",
+    "@rollup/plugin-replace": "^6.0.2",
     "@rollup/plugin-terser": "^0.4.0",
     "@rollup/plugin-typescript": "^12.1.2",
     "@tsconfig/svelte": "^5.0.4",
     "rollup": "^3.15.0",
     "rollup-plugin-css-only": "^4.3.0",
     "rollup-plugin-livereload": "^2.0.0",
+    "rollup-plugin-replace": "^2.2.0",
     "rollup-plugin-svelte": "^7.1.2",
     "svelte": "^3.55.0",
     "tslib": "^2.8.1",
@@ -27,6 +29,7 @@
     "@codemirror/lang-python": "^6.1.7",
     "@codemirror/theme-one-dark": "^6.1.2",
     "codemirror": "^6.0.1",
+    "dotenv": "^16.4.7",
     "idb-keyval": "^6.2.1",
     "sirv-cli": "^2.0.0",
     "svg-path-intersections": "^1.0.5"

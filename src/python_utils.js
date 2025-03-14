@@ -1,82 +1,16 @@
-import { get, set } from 'idb-keyval';
-// import { showDirectoryPicker } from 'fs-picker';
 
+import PythonExecutor from './PythonExecutor';
+
+const PYTHON_BACKEND = process.env.MY_API_KEY;
+
+export const executor = new PythonExecutor( PYTHON_BACKEND );
+
+// this is the callback used to update the REPL output
 export let stdout = null;
-// I tried to add this to keep the script context available in the REPL, but not working
-export let lastNamespace = null;
-
-export async function mountDirectory() {
-    // Access idb-keyval methods from the global scope (via CDN)
-    // const { get, set } = window.idbKeyval;
-
-    let dirHandle;
-
-    // Try to retrieve the stored directory handle
-    dirHandle = await get('directoryHandle');
-
-    if (dirHandle) {
-        // Verify permissions are still granted
-        const permissionStatus = await dirHandle.queryPermission({ mode: 'readwrite' });
-        if (permissionStatus !== 'granted') {
-            // Request permission again if not granted
-            const newPermissionStatus = await dirHandle.requestPermission({ mode: 'readwrite' });
-            if (newPermissionStatus !== 'granted') {
-                dirHandle = null; // Permission denied, reset to prompt user
-            }
-        }
-    }
-
-    // If no valid handle exists, prompt the user
-    if (!dirHandle) {
-        dirHandle = await showDirectoryPicker();
-        const permissionStatus = await dirHandle.requestPermission({ mode: 'readwrite' });
-        if (permissionStatus !== 'granted') {
-            throw new Error('readwrite access to directory not granted');
-        }
-        // Save the handle to IndexedDB
-        await set('directoryHandle', dirHandle);
-    }
-
-    // Mount the directory in Pyodide
-    const nativefs = await window.pyodide.mountNativeFS('/user-data', dirHandle);
-    await nativefs.syncfs(); // Sync changes to the native filesystem
-    console.log('Directory mounted at /user-data');
-}
-
-export async function writeFileToFS( filename ) {
-    const file_data = await (await fetch(`/${filename}`)).text();
-    pyodide.FS.writeFile(`/${filename}`, file_data, { encoding: "utf8" });
-}
-
-export async function doLoadPyodide( handleStdOut ) {
-    stdout = handleStdOut;
-    handleStdOut("Setting up Pyodide...");
-    let pyodide = await window.loadPyodide({
-        packages: ['micropip', 'numpy', 'matplotlib']
-    });
-    
-    const micropip = pyodide.pyimport("micropip");
-    
-    await micropip.install('awkward');
-    console.log("Installed awkward");
-    handleStdOut("Installed awkward");
-
-    await micropip.install('uproot');
-    console.log("Installed uproot");
-    handleStdOut("Installed uproot");
-
-    document.pyodideMplTarget = document.getElementById('MPL-container');
-
-    pyodide.setStdout({ batched: handleStdOut });
-    pyodide.setStderr({ batched: handleStdOut });
-    
-    window.pyodide = pyodide;
-    pyodide.setDebug(true);
-    handleStdOut("Pyodide done loading");
-  return pyodide;
-}
 
 export async function runPython2JSON( module_path) {
+    console.log("Running Python2JSON...");
+    return null;
     let pyodide = window.pyodide;
 
     let namespace = pyodide.toPy( {  } );
@@ -84,6 +18,7 @@ export async function runPython2JSON( module_path) {
 import json
 import sys
 sys.path.append('/user-data/')
+sys.path.append('./nodes/')
 import allpy2json
 
 script_source = "Running allpy2json..."
@@ -95,7 +30,9 @@ json.dumps(script_source)
 `;
 
     let output = null;
+    
     try {
+        // output = generic_python_runner( pythonCode );
         output = await pyodide.runPythonAsync(pythonCode, { globals: namespace });
         console.log("JSON Output:", output);
         if (output !== undefined) {
@@ -112,6 +49,8 @@ json.dumps(script_source)
 }
 
 export async function runEngine( graphData, execute = true ) {
+    console.log("Running Engine...");
+    return null;
     // alias our window level pyodide instance
     let pyodide = window.pyodide;
 
@@ -166,7 +105,7 @@ script_source
 async function runrun( script ){
     console.log("Running Running...");
     let pyodide = window.pyodide;
-    lastNamespace = pyodide.toPy( { graphData: graphData } );
+    let lastNamespace = pyodide.toPy( { graphData: graphData } );
     try {
         let source = script
         console.log("Running generated script...:", source );
@@ -181,8 +120,4 @@ async function runrun( script ){
     let mpl = document.getElementById('MPL-container');
     // hide the mpl container
     mpl.style.display = "block";
-}
-
-export function generateNodeDefs( name ){
-
 }
