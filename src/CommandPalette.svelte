@@ -6,7 +6,15 @@
     let searchTerm = "";
     let filteredCommands = commands;
     let selectedIndex = 0;  // NEW: tracks which command is highlighted
+    let listElement;  // NEW: reference to the <ul> element
 
+     // Reactively scroll to the selected item
+    $: if (listElement && filteredCommands.length > 0) {
+      const selectedItem = listElement.children[selectedIndex];
+      if (selectedItem) {
+        selectedItem.scrollIntoView({ behavior: 'auto', block: 'nearest' });
+      }
+    }
   
     $: filteredCommands = commands.filter(cmd =>
       cmd.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -43,7 +51,7 @@
       on:keydown={handleKeyDown}
       autofocus
     />
-    <ul>
+    <ul bind:this={listElement}>
       {#each filteredCommands as cmd, i}
         <!-- Highlight the currently selected item -->
         <li
