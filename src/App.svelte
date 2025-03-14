@@ -9,15 +9,9 @@
     import PyodideRepl from './PyodideREPL.svelte';
 	import { runEngine, mountDirectory, stdout, runPython2JSON } from './python_utils.js';
     import { config } from './CONF';
-	import CodeEditor from './CodeEditor.svelte';
+	import Grid from './Grid.svelte';
 
 	let pyodide; // Pyodide instance
-	let code = `def add(a, b):\n    return a + b\n\nadd(1, 2)`;
-
-	function handleCodeChange( newCode ) {
-		code = newCode;
-		console.log( "Code: ", code );
-	}
 
 	// some debug stuff
 	let highlightPointer = false;
@@ -305,13 +299,18 @@
 		{ name: 'Py2Nodes', callable: () => { loadNodesFromPythonSource() } }
 	];
 
-	async function loadNodesFromPythonSource(){
-		//  open a file picker to choose the python file
-		const file = await window.showOpenFilePicker();
-		const fileHandle = file[0];
-		// get file path
-		const path = fileHandle.name;
-		console.log("path", path);
+	async function loadNodesFromPythonSource( known_path = null ) {
+		
+		let path = known_path;
+
+		if ( !path ) {
+			//  open a file picker to choose the python file
+			const file = await window.showOpenFilePicker();
+			const fileHandle = file[0];
+			// get file path
+			path = fileHandle.name;
+			console.log("path", path);
+		}
 
 		// let path = "/user-data/example_functions.py";
 		// get just the file name
@@ -776,6 +775,13 @@
 		n.id === id ? { ...n, position: { x, y } } : n
 	  );
 	}
+
+	function onPyodideReady() {
+		// load our default nodes
+		loadNodesFromPythonSource( "example_functions.py" );
+		loadNodesFromPythonSource( "uproot_nodes.py" );
+		loadNodesFromPythonSource( "basic.py" );
+	}
 </script>
   
 <style>
@@ -844,6 +850,7 @@
 	  preserveAspectRatio="none"
 	  on:mousemove={handleMouseMove}
 	>
+	<Grid {cameraX} {cameraY} {scale} width={2000} height={2000} />
 		{#if highlightPointer}
 			<circle
 				cx={mouseX}
@@ -886,8 +893,7 @@
 	{/if}
 	<!-- <PyodideTerm /> -->
 </div>
-<!-- <CodeEditor value={code} onChange={handleCodeChange} /> -->
-<PyodideRepl {pyodide} />
+<PyodideRepl {pyodide} on:pyodideLoaded={onPyodideReady}/>
 <div>
 	<div id="MPL-container" style="position:absolute; top:0;"></div>
 </div>
