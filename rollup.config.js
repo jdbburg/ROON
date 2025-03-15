@@ -41,7 +41,8 @@ export default {
 		sourcemap: true,
 		format: 'iife',
 		name: 'app',
-		file: 'public/build/bundle.js'
+		// file: 'public/build/bundle.js'
+		file: 'roon/static/svelte/build/bundle.js'
 	},
 	plugins: [
 		svelte({

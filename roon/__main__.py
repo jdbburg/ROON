@@ -7,7 +7,7 @@ import roon.allpy2json as allpy2json
 import roon.engine as engine
 
 # Path to your Svelte app's build folder
-svelte_build_dir = os.path.abspath("./public")  # Adjust path as needed
+svelte_build_dir = os.path.abspath("./roon/static/svelte")  # Adjust path as needed
 
 # Serve the Svelte app locally
 def start_server():

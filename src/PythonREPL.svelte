@@ -33,6 +33,9 @@
         if (result["stdout"] === "") {
             execStdOut = "";
         }
+        if (result["stderr"] !== "") {
+            execStdOut += `\nERROR:${result["stderr"]}`;
+        }
         executionCount++;
         // later take care of stderr and return code
         // Append the command + result to our output

@@ -643,7 +643,6 @@
 	function handleCameraPan( dx, dy ){
 		cameraX += dx / scale;
 		cameraY += dy / scale;
-		console.log( "viewBox: ", viewBoxString );
 	}
 
 	// Zoom in/out with mouse wheel

@@ -96,6 +96,7 @@ ${code}
       `;
       const response = await window.pywebview.api.run_python(contextCode);
       this.stdoutBuffer.push(response.output || '');
+      this.stderrBuffer.push(response.error || '');
       console.debug('PyWebView response:', response );
       return response.result; // Assumes PyWebView API returns { result, output }
     }
