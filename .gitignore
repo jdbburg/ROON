@@ -11,3 +11,11 @@ nodes/uproot2/open_root_file.json
 nodes/uproot2/plot_histogram.json
 nodes/uproot2/read_tree_branch.json
 nodes/uproot2/TypedDict.json
+dist/roon-0.1.0-py3-none-any.whl
+dist/roon-0.1.0.tar.gz
+src/roon.egg-info/dependency_links.txt
+src/roon.egg-info/entry_points.txt
+src/roon.egg-info/PKG-INFO
+src/roon.egg-info/requires.txt
+src/roon.egg-info/SOURCES.txt
+src/roon.egg-info/top_level.txt

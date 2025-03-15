@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "roon"
+version = "0.1.0"
+dependencies = ["pywebview"]
+
+[project.scripts]
+my-app = "app:full_setup"
+
+[tool.setuptools]
+include-package-data = true

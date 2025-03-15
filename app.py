@@ -3,8 +3,8 @@ import os
 import io
 import sys
 
-import nodes.allpy2json as allpy2json
-import nodes.engine as engine
+import roon.allpy2json as allpy2json
+import roon.engine as engine
 
 # Path to your Svelte app's build folder
 svelte_build_dir = os.path.abspath("./public")  # Adjust path as needed
@@ -27,6 +27,8 @@ def start_server():
     return f"http://localhost:{PORT}"
 
 # Python functions to expose to JavaScript
+
+exec_globals = {}
 class Api:
 
     def source_to_json_nodes(self, module_path):
@@ -54,7 +56,6 @@ class Api:
             sys.stderr = stderr_buffer
 
             # Execute code
-            exec_globals = {}
             exec(code, exec_globals)
 
             # Restore stdout/stderr
@@ -76,7 +77,7 @@ class Api:
             sys.stdout = sys.__stdout__
             sys.stderr = sys.__stderr__
 
-if __name__ == "__main__":
+def full_setup():
     # Start the local server
     url = start_server()
 
@@ -101,4 +102,6 @@ if __name__ == "__main__":
     """)
 
     webview.start(debug=True)
-    # window.evaluate_js('window.is_pywebview = true;')
+
+if __name__ == "__main__":
+    full_setup()

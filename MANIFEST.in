@@ -1,0 +1,2 @@
+recursive-include roon/static *
+recursive-include public *
