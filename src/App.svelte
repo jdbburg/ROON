@@ -6,9 +6,9 @@
 	// import BuiltInNodes from './BuiltInNodes.svelte';
 	import { checkCollision } from 'svg-path-intersections';
     // import PyodideTerm from './PyodideTerm.svelte';
-    import PyodideRepl from './PyodideREPL.svelte';
-	import { runEngine, mountDirectory, stdout, runPython2JSON } from './python_utils.js';
-    import { config } from './CONF';
+    import PythonRepl from './PythonREPL.svelte';
+	import { runEngine, stdout, runPython2JSON } from './python_utils.js';
+    import { config } from './config';
 	import Grid from './Grid.svelte';
 
 	let pyodide; // Pyodide instance
@@ -22,6 +22,9 @@
  * ------------------------------------------------------------------------- */
 	let commandHistory = [];
 	let commandIndex = -1;
+
+	$: gridWidth = baseWidth / scale;
+	$: gridHeight = baseHeight / scale;
 
 	function pushCommand(cmd) {
 		// If we're in the middle of the history, overwrite the current command
@@ -294,7 +297,7 @@
 		{ name: 'Undo', callable: undo },
 		{ name: 'Redo', callable: redo },
 		{ name: 'Save Image', callable: saveAsSVG },
-		{ name: 'setup fs', callable: mountDirectory },
+		// { name: 'setup fs', callable: mountDirectory },
 		{ name: 'Generate Python Script', callable: generateScriptAndSave},
 		{ name: 'Py2Nodes', callable: () => { loadNodesFromPythonSource() } }
 	];
@@ -640,6 +643,7 @@
 	function handleCameraPan( dx, dy ){
 		cameraX += dx / scale;
 		cameraY += dy / scale;
+		console.log( "viewBox: ", viewBoxString );
 	}
 
 	// Zoom in/out with mouse wheel
@@ -770,9 +774,15 @@
 	}
   
 	// Called by Node.svelte when a node is dragged
+	function snapNodeToGrid(id, x, y) {
+	  const gridSize = 20;
+	  const snappedX = Math.round(x / gridSize) * gridSize;
+	  const snappedY = Math.round(y / gridSize) * gridSize;
+	  return { x: snappedX, y: snappedY };
+	}
 	function updateNodePosition(id, x, y) {
 	  graphData.nodes = graphData.nodes.map(n =>
-		n.id === id ? { ...n, position: { x, y } } : n
+		n.id === id ? { ...n, position: snapNodeToGrid(id, x, y) } : n
 	  );
 	}
 
@@ -850,7 +860,9 @@
 	  preserveAspectRatio="none"
 	  on:mousemove={handleMouseMove}
 	>
-	<Grid {cameraX} {cameraY} {scale} width={2000} height={2000} />
+		{#if config.grid.visible}
+			<Grid {cameraX} {cameraY} {scale} width={gridWidth} height={gridHeight} />
+		{/if}
 		{#if highlightPointer}
 			<circle
 				cx={mouseX}
@@ -893,7 +905,7 @@
 	{/if}
 	<!-- <PyodideTerm /> -->
 </div>
-<PyodideRepl {pyodide} on:pyodideLoaded={onPyodideReady}/>
+<PythonRepl {pyodide} on:pyodideLoaded={onPyodideReady}/>
 <div>
 	<div id="MPL-container" style="position:absolute; top:0;"></div>
 </div>

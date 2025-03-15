@@ -1,3 +1,5 @@
+import { doLoadPyodide } from "./pyodide_helpers";
+
 class PythonExecutor {
     constructor(backend = 'auto') {
       this.backend = backend === 'auto' ? this.detectBackend() : backend;
@@ -21,11 +23,7 @@ class PythonExecutor {
     // Initialize the backend (e.g., load Pyodide)
     async initializeBackend() {
       if (this.backend === 'pyodide' && !this.pyodide) {
-        this.pyodide = await window.loadPyodide({
-          indexURL: "https://cdn.jsdelivr.net/pyodide/v0.23.4/full/",
-          stdout: (text) => this.stdoutBuffer.push(text),
-          stderr: (text) => this.stderrBuffer.push(text)
-        });
+        this.pyodide = await doLoadPyodide( (text) => this.stdoutBuffer.push(text) );
       }
       // Jupyter initialization would go here (WebSocket setup)
     }
@@ -92,12 +90,13 @@ class PythonExecutor {
       }
       // PyWebView doesn't natively support globals/locals, so we simulate it
       const contextCode = `
-        globals().update(${JSON.stringify(globals)});
-        locals().update(${JSON.stringify(locals)});
-        ${code}
+globals().update(${JSON.stringify(globals)});
+locals().update(${JSON.stringify(locals)});
+${code}
       `;
       const response = await window.pywebview.api.run_python(contextCode);
       this.stdoutBuffer.push(response.output || '');
+      console.debug('PyWebView response:', response );
       return response.result; // Assumes PyWebView API returns { result, output }
     }
   

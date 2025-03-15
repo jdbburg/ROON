@@ -1,7 +1,7 @@
 <script>
   import { createEventDispatcher } from 'svelte';
   import Socket from './Socket.svelte';
-  import { config } from './CONF.js';
+  import { config } from './config.js';
 
   export let node;
   export let screenToGraphCoords; // function from parent

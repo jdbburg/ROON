@@ -1,7 +1,7 @@
 
 import PythonExecutor from './PythonExecutor';
 
-const PYTHON_BACKEND = process.env.MY_API_KEY;
+const PYTHON_BACKEND = process.env.PYTHON_BACKEND || 'auto';
 
 export const executor = new PythonExecutor( PYTHON_BACKEND );
 

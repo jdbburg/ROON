@@ -1,5 +1,5 @@
 
-import {config} from './CONF'
+import {config} from './config'
 
 const hueOverrides = {
   "str": 72,

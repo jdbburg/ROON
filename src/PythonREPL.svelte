@@ -1,43 +1,42 @@
 <script>
     import { onMount, createEventDispatcher } from "svelte";
-    import { doLoadPyodide, mountDirectory, lastNamespace, generic_python_runner, stdout } from "./python_utils.js";
+    import { executor, stdout } from "./python_utils.js";
     import CodeEditor from "./CodeEditor.svelte";
 
     const dispatch = createEventDispatcher();
 
     export let pyodide; // the Pyodide instance passed from the parent
     let pythonCode = `print("Hello, Pyodide!")`;
+    let executionCount = 0;
+
 
     function handleCodeChange(newCode) {
         // code = newCode;
     }
 
     // State for the REPL
-    let userInput = "";
     let outputLines = [];
 
     // Execute the entered code on pressing Enter
     async function handleEnter(v) {
-      if ( window.pywebview ) {
-        // stdout( " USING PYWEBVIEW ");
-      }
-        console.log("handleEnter, code=", v);
-      if (!pyodide && !window.pywebview) {
-        console.error("Pyodide not loaded yet and python not ready");
-        return;
-      }
-      // const code = userInput;
-      userInput = "";  // clear the input
+      console.log("handleEnter, code=", v);
       let code = v;
 
       try {
         // let result = await pyodide.runPythonAsync(code);
-        let result = await generic_python_runner(code, {})
+        let result = await executor.execute(code, {}, {});
         if (result === undefined) {
             result = "";
         }
+        // result = result["stdout"];
+        let execStdOut = `[${executionCount}] ${result["stdout"]}`;
+        if (result["stdout"] === "") {
+            execStdOut = "";
+        }
+        executionCount++;
+        // later take care of stderr and return code
         // Append the command + result to our output
-        outputLines = [`>>> ${code}`, result, ...outputLines];
+        outputLines = [`>>> ${code}`, execStdOut, ...outputLines];
       } catch (err) {
         // On error, show the traceback or error message
         outputLines = [`>>> ${code}`, String(err), ...outputLines];
@@ -45,20 +44,23 @@
     }
 
     function handleStdOut(output) {
+      
       console.log("STDOUT: ", output);
       outputLines = [output, ...outputLines];
     }
 
     onMount(async () => {
-        pyodide = await doLoadPyodide( handleStdOut );
-        if ( window.pywebview ) {
-          stdout( "nvm, we are native");
-          dispatch("pythonReady");
-          dispatch("pyodideLoaded");
-        } else {
-          await mountDirectory(pyodide);
-          dispatch("pyodideLoaded");
-        }
+        // setup the Python executor
+
+        // pyodide = await doLoadPyodide( handleStdOut );
+        // if ( window.pywebview ) {
+        //   stdout( "nvm, we are native");
+        //   dispatch("pythonReady");
+        //   dispatch("pyodideLoaded");
+        // } else {
+        //   await mountDirectory(pyodide);
+        //   dispatch("pyodideLoaded");
+        // }
     });
   </script>
   
@@ -117,22 +119,9 @@
         <div class="line">{line}</div>
       {/each}
     </div>
-  
     
-    <!-- Single-line input for Python commands -->
+    <!-- Input for Python commands, uses codemirror -->
     <div class="input-area">
-      
-      <!-- <input
-        type="text"
-        bind:value={userInput}
-        on:keydown={(e) => {
-          if (e.key === 'Enter') {
-            handleEnter();
-          }
-        }}
-        placeholder="Type Python code and press Enter..."
-      /> -->
-
       <CodeEditor value={pythonCode} onChange={handleCodeChange} onShiftEnter={handleEnter} immediateMode={true}/>
     </div>
   </div>

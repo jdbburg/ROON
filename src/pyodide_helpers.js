@@ -41,7 +41,7 @@ export async function writeFileToFS( filename ) {
 }
 
 export async function doLoadPyodide( handleStdOut ) {
-    stdout = handleStdOut;
+    // stdout = handleStdOut;
     console.log("Loading Pyodide...but first checking for pywebview: ", !!window.is_pywebview);
     if ( window.pywebview ) {
         console.log("Running in pywebview, no need to use Pyodide");

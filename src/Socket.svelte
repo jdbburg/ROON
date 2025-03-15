@@ -1,7 +1,7 @@
 <script>
     import { createEventDispatcher } from 'svelte';
     import { socketColorForType, socketPosition } from './node_utilities.ts';
-    import { config } from './CONF.js';
+    import { config } from './config.js';
     export let socket;
     export let index;
     export let nodeId; // id of our Node if needed
