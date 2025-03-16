@@ -1,4 +1,4 @@
-
+VERSION=0.4.5
 
 build:
 	python -m build
@@ -11,4 +11,4 @@ check:
 
 publish:
 	python -m build
-	twine upload dist/*    
+	twine upload dist/*$(VERSION)*

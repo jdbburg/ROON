@@ -2,6 +2,7 @@
 
 A node bsed editor for python using with a modern svelte frontend UI
 
+Use Meta+Shift+P to access command prompt
 # Development
 ## Svelte Application
 Uses rollup + svelte
@@ -42,4 +43,16 @@ build:
 We use twine to publish the pypi package (use Makefile target `check` and `publish`)
 Twine uses authentication in `$HOME/.pypirc` for pushing to PyPi.
 
+
+# ROADMAP
+- Fix widgets
+- hotkeys for inserting nodes
+- view node source
+- import nodes from libs directly from (numpy) or provide wrapper
+- write nodes in app
+- "h" - home hotkey to zoom according to actual extend of nodes in graph
+- comment out nodes
+- dynamic nodes: dictionaries and kwargs etc.
+- viewer nodes for plots etc.
+- pause python execution for input (view plots one at a time...)
 

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "roon"
-version = "0.4.2"
+version = "0.4.5"
 description = "A modern node based python editor and REPL for physics, education, and data analysis"
 readme = "README.md" 
 dependencies = ["pywebview"]
@@ -22,4 +22,4 @@ include-package-data = true
 packages = ["roon"]
 
 [tool.setuptools.package-data]
-"roon" = ["static/*", "static/svelte/*", "static/svelte/build/*"]
+"roon" = ["static/*", "static/svelte/*", "static/svelte/build/*", "static/nodes/*" ]
