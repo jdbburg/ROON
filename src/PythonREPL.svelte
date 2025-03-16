@@ -1,12 +1,12 @@
 <script>
     import { onMount, createEventDispatcher } from "svelte";
-    import { executor, stdout } from "./python_utils.js";
+    import { executor } from "./python_utils.js";
     import CodeEditor from "./CodeEditor.svelte";
 
     const dispatch = createEventDispatcher();
 
     export let pyodide; // the Pyodide instance passed from the parent
-    let pythonCode = `print("Hello, Pyodide!")`;
+    export let pythonCode = `print("Hello, Pyodide!")`;
     let executionCount = 0;
 
 
@@ -55,15 +55,8 @@
     onMount(async () => {
         // setup the Python executor
 
-        // pyodide = await doLoadPyodide( handleStdOut );
-        // if ( window.pywebview ) {
-        //   stdout( "nvm, we are native");
-        //   dispatch("pythonReady");
-        //   dispatch("pyodideLoaded");
-        // } else {
-        //   await mountDirectory(pyodide);
-        //   dispatch("pyodideLoaded");
-        // }
+        executor.stdoutHandler = handleStdOut;
+        executor.stderrHandler = handleStdOut;
     });
   </script>
   

@@ -5,51 +5,92 @@ const PYTHON_BACKEND = process.env.PYTHON_BACKEND || 'auto';
 
 export const executor = new PythonExecutor( PYTHON_BACKEND );
 
-// this is the callback used to update the REPL output
-export let stdout = null;
+const pythonEngineCode = `
+import json
+import sys
+import roon.engine as engine
+import sys
+sys.path.append('./roon/')
 
-export async function runPython2JSON( module_path) {
+# Evaluate using your DAG logic in engine.py
+result = engine.generate_python_script(graphData)
+result
+`;
+
+export async function runPython2JSON( module_path ) {
     console.log("Running Python2JSON...");
-    return null;
-    let pyodide = window.pyodide;
-
-    let namespace = pyodide.toPy( {  } );
     const pythonCode = `
 import json
 import sys
 sys.path.append('/user-data/')
 sys.path.append('./nodes/')
-import allpy2json
+import roon.allpy2json
+import roon.builtin2json as builtin2json
 
 script_source = "Running allpy2json..."
 #print("Running allpy2json...")
 # Evaluate using your DAG logic in engine.py
-script_source = allpy2json.analyze_module_functions( "${module_path}", None, "/user-data/" )
+#script_source = allpy2json.analyze_module_functions( "${module_path}", None, "" )
+defs = builtin2json.analyze_installed_module_functions( "${module_path}", None )
 #print(script_source)
-json.dumps(script_source)
+result = defs
 `;
 
     let output = null;
     
     try {
         // output = generic_python_runner( pythonCode );
-        output = await pyodide.runPythonAsync(pythonCode, { globals: namespace });
+        output = await executor.execute( pythonCode, {}, {} );
         console.log("JSON Output:", output);
-        if (output !== undefined) {
-            console.log( JSON.parse(output)) ;
-            return JSON.parse(output);
-        }
+        // if (output !== undefined) {
+        //     // console.log( JSON.parse(output)) ;
+        //     return JSON.parse(output)["result"];
+        // }
            
     }
     catch (err) {
-        console.error("Error running engine:", String(err) );
-        stdout( String(err) );
+        console.error("Error running NODE DEFS:", String(err) );
+        output = { error: String(err), result: null };
     }
     return output;
 }
 
 export async function runEngine( graphData, execute = true ) {
     console.log("Running Engine...");
+    let output = null;
+    try{
+        output = await executor.execute( pythonEngineCode, {graphData: graphData}, {} );
+    } catch (err) {
+        console.error("Error running engine:", String(err) );
+        stdout( String(err) );
+    }
+    
+    console.log("Engine Output:", output);
+
+    if (!execute) {
+        return output;
+    }
+
+    console.log("Running Engine Complete");
+    console.log("Running generated graph script...");
+    let script_output = await executor.execute( output["result"], {graphData: graphData}, {} );
+    executor.stdoutHandler( script_output["stdout"] );
+    executor.stderrHandler( script_output["stderr"] );
+
+    // append the output to the stdout buffer
+    // if (stdoutHandler) {
+    //     stdoutHandler( script_output["stdout"] );
+    // } else {
+    //     console.log("NO HANDLER: stdout:", script_output["stdout"]);
+    // }
+    // if (stderrHandler) {
+    //     stderrHandler( script_output["stderr"] );
+    // }
+
+    console.log("Running generated graph script complete");
+    console.log("Script Output:", script_output);
+    // await runrun( output["result"] );
+
     return null;
     // alias our window level pyodide instance
     let pyodide = window.pyodide;
@@ -68,21 +109,12 @@ export async function runEngine( graphData, execute = true ) {
     //    - Parses graphJson
     //    - Calls the evaluate function
     //    - Returns the result as a JSON string
-    const pythonCode = `
-import json
-import sys
-sys.path.append('/user-data/')
-import engine
-
-# Evaluate using your DAG logic in engine.py
-script_source = engine.generate_python_script(graphData)
-script_source
-`;
+    
 
     // 4) Run the Python code
     console.log('Running engine...');
     console.debug('Python code:', pythonCode);
-    let output = null;
+    // let output = null;
     try {
         output = pyodide.runPython(pythonCode, { globals: graph_namespace });
     }

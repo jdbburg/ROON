@@ -6,6 +6,9 @@ class PythonExecutor {
       this.pyodide = null; // Will be set if Pyodide is used
       this.initializeBackend();
     }
+
+    stdoutHandler = null;
+    stderrHandler = null;
   
     // Detect the available backend
     detectBackend() {
@@ -90,11 +93,14 @@ class PythonExecutor {
       }
       // PyWebView doesn't natively support globals/locals, so we simulate it
       const contextCode = `
-globals().update(${JSON.stringify(globals)});
-locals().update(${JSON.stringify(locals)});
+# this doesnt seem to work, so I pass globals and locals as arguments
+#globals().update(${JSON.stringify(globals)});
+#locals().update(${JSON.stringify(locals)});
+import sys
+sys.path.append('roon')
 ${code}
       `;
-      const response = await window.pywebview.api.run_python(contextCode);
+      const response = await window.pywebview.api.run_python(contextCode, globals, locals);
       this.stdoutBuffer.push(response.output || '');
       this.stderrBuffer.push(response.error || '');
       console.debug('PyWebView response:', response );
