@@ -1,107 +1,45 @@
-# This repo is no longer maintained. Consider using `npm init vite` and selecting the `svelte` option or — if you want a full-fledged app framework — use [SvelteKit](https://kit.svelte.dev), the official application framework for Svelte.
+# ROON
 
----
+A node bsed editor for python using with a modern svelte frontend UI
 
-# svelte app
-
-This is a project template for [Svelte](https://svelte.dev) apps. It lives at https://github.com/sveltejs/template.
-
-To create a new project based on this template using [degit](https://github.com/Rich-Harris/degit):
-
-```bash
-npx degit sveltejs/template svelte-app
-cd svelte-app
+# Development
+## Svelte Application
+Uses rollup + svelte
+For development (live reload etc.):
 ```
-
-*Note that you will need to have [Node.js](https://nodejs.org) installed.*
-
-
-## Get started
-
-Install the dependencies...
-
-```bash
-cd svelte-app
-npm install
-```
-
-...then start [Rollup](https://rollupjs.org):
-
-```bash
 npm run dev
 ```
 
-Navigate to [localhost:8080](http://localhost:8080). You should see your app running. Edit a component file in `src`, save it, and reload the page to see your changes.
-
-By default, the server will only respond to requests from localhost. To allow connections from other computers, edit the `sirv` commands in package.json to include the option `--host 0.0.0.0`.
-
-If you're using [Visual Studio Code](https://code.visualstudio.com/) we recommend installing the official extension [Svelte for VS Code](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode). If you are using other editors you may need to install a plugin in order to get syntax highlighting and intellisense.
-
-## Building and running in production mode
-
-To create an optimised version of the app:
-
-```bash
+For a production build:
+```
 npm run build
 ```
 
-You can run the newly built app with `npm run start`. This uses [sirv](https://github.com/lukeed/sirv), which is included in your package.json's `dependencies` so that the app will work when you deploy to platforms like [Heroku](https://heroku.com).
+Note: the `.env` file is used to set the python backend:
+```
+PYTHON_BACKEND=auto
+```
+Options are: `auto`, `pyodide`, `pywebview`, `jupyter` - but `pywebview` is the primary target with others to be implemented later. Pyodide works for a fully browser based implementation, but the filesystem (needed for any real data analysis) is only supported in chrome and edge.
 
+Make sure that production builds for the python package are setup with `pywebview` - because it takes some time for the js bridge to fully load, the automatic detection of the backend is slower than being set directly.
 
-## Single-page app mode
-
-By default, sirv will only respond to requests that match files in `public`. This is to maximise compatibility with static fileservers, allowing you to deploy your app anywhere.
-
-If you're building a single-page app (SPA) with multiple routes, sirv needs to be able to respond to requests for *any* path. You can make it so by editing the `"start"` command in package.json:
-
-```js
-"start": "sirv public --single"
+note: the svelte app is setup to write out the build files to a custom directory for integration with python app (in the `roon/static/` directory) instead of the standard `public`. So you need to symlink to make development builds available in browser (if you want to work in the browser)
+```
+ln -s roon/static/svelte/public public
 ```
 
-## Using TypeScript
+## Python application
 
-This template comes with a script to set up a TypeScript development environment, you can run it immediately after cloning the template with:
+Use makefile for installing development builds and for building the package for publication
+```
+dev-build:
+	python -m pip install --editable .
 
-```bash
-node scripts/setupTypeScript.js
+build:
+	python -m build
 ```
 
-Or remove the script via:
+We use twine to publish the pypi package (use Makefile target `check` and `publish`)
+Twine uses authentication in `$HOME/.pypirc` for pushing to PyPi.
 
-```bash
-rm scripts/setupTypeScript.js
-```
 
-If you want to use `baseUrl` or `path` aliases within your `tsconfig`, you need to set up `@rollup/plugin-alias` to tell Rollup to resolve the aliases. For more info, see [this StackOverflow question](https://stackoverflow.com/questions/63427935/setup-tsconfig-path-in-svelte).
-
-## Deploying to the web
-
-### With [Vercel](https://vercel.com)
-
-Install `vercel` if you haven't already:
-
-```bash
-npm install -g vercel
-```
-
-Then, from within your project folder:
-
-```bash
-cd public
-vercel deploy --name my-project
-```
-
-### With [surge](https://surge.sh/)
-
-Install `surge` if you haven't already:
-
-```bash
-npm install -g surge
-```
-
-Then, from within your project folder:
-
-```bash
-npm run build
-surge public my-project.surge.sh
-```

@@ -96,7 +96,7 @@ def generate_python_script(json_data):
     # Assemble the script
     module_import_star_lines = [module_import_star(module) for module in dependency_modules]
     script = (
-        "import sys\n\nsys.path.append('/user-data/')\n\n" +
+        "import sys\n\nsys.path.append('/Users/brandenburg.89/Development/rune/svelte/svelte-node-graph/nodes/')\n\n" +
         "\n\n".join(module_import_star_lines) + "\n\n" +
         "\n\n".join(function_defs) + "\n\n" +
         "\n".join(execution_lines)

@@ -6,6 +6,9 @@ build:
 dev-build:
 	python -m pip install --editable .
 
-update-svelte:
-	rm -rf roon/static/svelte/*
-	cp -r public/* roon/static/svelte/
+check:
+	twine check dist/*
+
+publish:
+	python -m build
+	twine upload dist/*    

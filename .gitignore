@@ -19,3 +19,6 @@ src/roon.egg-info/PKG-INFO
 src/roon.egg-info/requires.txt
 src/roon.egg-info/SOURCES.txt
 src/roon.egg-info/top_level.txt
+dist/*
+roon.egg-info/*
+src/roon.egg-info/*
