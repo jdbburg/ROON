@@ -21,6 +21,9 @@ export async function runPython2JSON( module_path ) {
     console.log("Running Python2JSON...");
     const pythonCode = `
 import json
+import importlib.resources as resources
+with resources.path("roon", "static") as static_path:
+    sys.path.append(str(static_path))
 import sys
 sys.path.append('/user-data/')
 sys.path.append('./nodes/')
