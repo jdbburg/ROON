@@ -7,15 +7,25 @@
 	import { checkCollision } from 'svg-path-intersections';
     // import PyodideTerm from './PyodideTerm.svelte';
     import PythonRepl from './PythonREPL.svelte';
-	import { runEngine, stdout, runPython2JSON } from './python_utils.js';
+	import { runEngine, executor, runPython2JSON } from './python_utils.js';
     import { config } from './config';
 	import Grid from './Grid.svelte';
 
 	let pyodide; // Pyodide instance
+	let userCode = `print("Hello, ROON!")`;
+	$: pythonCode = userCode
 
 	// some debug stuff
 	let highlightPointer = false;
 	let highlightPosition = { x: 0, y: 0 };
+
+
+	window.addEventListener('pywebviewready', function() {
+		console.log("pywebviewready");
+		loadNodesFromPythonSource( "nodes.example_functions" );
+		loadNodesFromPythonSource( "nodes.uproot_nodes" );
+		loadNodesFromPythonSource( "nodes.matplotlib_nodes" );
+	});
 
 /* ---------------------------------------------------------------------------
  * Command undo/redo logic
@@ -299,11 +309,22 @@
 		{ name: 'Save Image', callable: saveAsSVG },
 		// { name: 'setup fs', callable: mountDirectory },
 		{ name: 'Generate Python Script', callable: generateScriptAndSave},
-		{ name: 'Py2Nodes', callable: () => { loadNodesFromPythonSource() } }
+		{ name: 'Py2Nodes', callable: () => {  ["nodes.example_functions", "nodes.uproot_nodes"].map( loadNodesFromPythonSource ); } },
+		{ name: 'Show GeneratedScript', callable: () => { showGeneratedScript();  } }
 	];
 
+	async function showGeneratedScript() {
+		let generated_script = await runEngine( graphData, false );
+		if ( !generated_script ) {
+			console.log( "No script generated" );
+			return;
+		}
+		// userCode = generated_script;
+		userCode = generated_script["result"];
+		console.log( "Generated Script: ", generated_script );
+	}
 	async function loadNodesFromPythonSource( known_path = null ) {
-		
+		console.log("LoadNodesFromPythonSource: ", known_path);
 		let path = known_path;
 
 		if ( !path ) {
@@ -320,15 +341,17 @@
 		let fileName = path.split('/').pop();
 		
 		// let fileExtension = fileName.split('.').pop();, we could check for .py?
-		let node_defs = await runPython2JSON( `/user-data/${path}` );
+		let response = await runPython2JSON( `${path}` );
+		let node_defs = response["result"];
+		console.log( "NodeDefs: ", node_defs );
 
 		if (node_defs) {
 			for (const name in node_defs) {
 				let def = JSON.parse(node_defs[name]);
 				// delete the def.id so that a new id is assigned when the node is added
 				delete def.id;
-				commands.push( { name: fileName.slice( 0, -3) + ": " + name + "  (n)" , callable: () => { addNodeToGraph(def); } } );
-				stdout( `Node Added: ${name}` );
+				commands.push( { name: path + ": " + name + "  (n)" , callable: () => { addNodeToGraph(def); } } );
+				executor.stdoutHandler( `Node Added: ${name}` );
 			}
 		}
 	}
@@ -755,9 +778,9 @@
 	// Return the (x,y) in graph coords for a socket
 	// Because we're directly using viewBox, these are just node.position plus offsets
 	function getSocketPosition(node, type, index) {
-	  const nodeWidth = 160;
-	  const topOffset = 30;
-	  const spacing = 25;
+	  const nodeWidth = config.node.width;
+	  const topOffset = config.node.header.height;
+	  const spacing = config.node.socket.separation;
   
 	  let x = (type === 'input')
 		? node.position.x + 5
@@ -904,7 +927,7 @@
 	{/if}
 	<!-- <PyodideTerm /> -->
 </div>
-<PythonRepl {pyodide} on:pyodideLoaded={onPyodideReady}/>
+<PythonRepl {pyodide} on:pyodideLoaded={onPyodideReady} {pythonCode}/>
 <div>
 	<div id="MPL-container" style="position:absolute; top:0;"></div>
 </div>
