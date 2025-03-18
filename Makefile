@@ -1,4 +1,4 @@
-VERSION=0.4.5
+VERSION=0.4.6
 
 build:
 	python -m build
@@ -7,8 +7,10 @@ dev-build:
 	python -m pip install --editable .
 
 check:
-	twine check dist/*
+	echo "Checking roon version $(VERSION)"
+	twine check dist/*$(VERSION)*
 
 publish:
+	echo "Publishing roon version $(VERSION)"
 	python -m build
 	twine upload dist/*$(VERSION)*

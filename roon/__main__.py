@@ -25,16 +25,16 @@ def start_server():
 
     """Start an HTTP server to serve Svelte static files."""
     # Determine if running from source or installed package
-    if "roon" in sys.modules and hasattr(sys.modules["roon"], "__file__"):
-        # Running from source directory
-        module_dir = os.path.dirname(os.path.abspath(__file__))
-        # svelte_build_dir = os.path.join(module_dir, "static", "svelte")
-        svelte_build_dir = os.path.abspath("./public/")
-        print("Using local build dir")
-    else:
-        # Running from installed package
-        with resources.path("roon.static", "svelte") as svelte_path:
-            svelte_build_dir = str(svelte_path)
+    # if "roon" in sys.modules and hasattr(sys.modules["roon"], "__file__"):
+    #     # Running from source directory
+    #     module_dir = os.path.dirname(os.path.abspath(__file__))
+    #     # svelte_build_dir = os.path.join(module_dir, "static", "svelte")
+    #     svelte_build_dir = os.path.abspath("./public/")
+    #     print("Using local build dir")
+    # else:
+    # Running from installed package
+    with resources.path("roon.static", "svelte") as svelte_path:
+        svelte_build_dir = str(svelte_path)
 
     if not os.path.exists(svelte_build_dir):
         raise FileNotFoundError(f"Svelte build directory not found: {svelte_build_dir}")
