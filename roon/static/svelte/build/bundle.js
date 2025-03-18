@@ -714,14 +714,14 @@ var app = (function () {
     const file$7 = "src/Socket.svelte";
 
     // (64:4) {#if (socketFlow == "input" && showWidgets && socket.default !== undefined)}
-    function create_if_block$1(ctx) {
+    function create_if_block$2(ctx) {
     	let foreignObject;
     	let div;
     	let t;
     	let foreignObject_y_value;
 
     	function select_block_type(ctx, dirty) {
-    		if (/*socket*/ ctx[0].type === 'number') return create_if_block_1$1;
+    		if (/*socket*/ ctx[0].type === 'number') return create_if_block_1$2;
     		if (/*socket*/ ctx[0].type === 'string') return create_if_block_2$1;
     		return create_else_block;
     	}
@@ -776,7 +776,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block$1.name,
+    		id: create_if_block$2.name,
     		type: "if",
     		source: "(64:4) {#if (socketFlow == \\\"input\\\" && showWidgets && socket.default !== undefined)}",
     		ctx
@@ -897,7 +897,7 @@ var app = (function () {
     }
 
     // (73:6) {#if socket.type === 'number'}
-    function create_if_block_1$1(ctx) {
+    function create_if_block_1$2(ctx) {
     	let input;
     	let input_value_value;
     	let mounted;
@@ -942,7 +942,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_if_block_1$1.name,
+    		id: create_if_block_1$2.name,
     		type: "if",
     		source: "(73:6) {#if socket.type === 'number'}",
     		ctx
@@ -972,7 +972,7 @@ var app = (function () {
     	let circle1_fill_value;
     	let mounted;
     	let dispose;
-    	let if_block = /*socketFlow*/ ctx[2] == "input" && /*showWidgets*/ ctx[3] && /*socket*/ ctx[0].default !== undefined && create_if_block$1(ctx);
+    	let if_block = /*socketFlow*/ ctx[2] == "input" && /*showWidgets*/ ctx[3] && /*socket*/ ctx[0].default !== undefined && create_if_block$2(ctx);
 
     	const block = {
     		c: function create() {
@@ -1045,7 +1045,7 @@ var app = (function () {
     				if (if_block) {
     					if_block.p(ctx, dirty);
     				} else {
-    					if_block = create_if_block$1(ctx);
+    					if_block = create_if_block$2(ctx);
     					if_block.c();
     					if_block.m(g1, g0);
     				}
@@ -4159,25 +4159,24 @@ result = engine.generate_python_script(graphData)
 result
 `;
 
-    async function runPython2JSON( module_path ) {
+    async function runPython2JSON( module_path, type = "module" ) {
         console.log("Running Python2JSON...");
+
+        let fun_call = "builtin2json.analyze_installed_module_functions";
+        if (type === "source"){
+            fun_call = "source2json.analyze_source_code_functions";
+        }
+
         const pythonCode = `
 import json
-import importlib.resources as resources
-with resources.path("roon", "static") as static_path:
-    sys.path.append(str(static_path))
 import sys
 sys.path.append('/user-data/')
 sys.path.append('./nodes/')
-import roon.allpy2json
+import roon.allpy2json as allpy2json
 import roon.builtin2json as builtin2json
+import roon.source2json as source2json
 
-script_source = "Running allpy2json..."
-#print("Running allpy2json...")
-# Evaluate using your DAG logic in engine.py
-#script_source = allpy2json.analyze_module_functions( "${module_path}", None, "" )
-defs = builtin2json.analyze_installed_module_functions( "${module_path}", None )
-#print(script_source)
+defs = ${fun_call}( """${module_path}""", None )
 result = defs
 `;
 
@@ -4185,6 +4184,7 @@ result = defs
         
         try {
             // output = generic_python_runner( pythonCode );
+            console.log("Running Python2JSON: ", pythonCode );
             output = await executor.execute( pythonCode, {}, {} );
             console.log("JSON Output:", output);
             // if (output !== undefined) {
@@ -32059,29 +32059,29 @@ result = defs
 
     function get_each_context$2(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[8] = list[i];
+    	child_ctx[9] = list[i];
     	return child_ctx;
     }
 
-    // (114:6) {#each outputLines as line}
+    // (125:6) {#each outputLines as line}
     function create_each_block$2(ctx) {
     	let div;
-    	let t_value = /*line*/ ctx[8] + "";
+    	let t_value = /*line*/ ctx[9] + "";
     	let t;
 
     	const block = {
     		c: function create() {
     			div = element("div");
     			t = text(t_value);
-    			attr_dev(div, "class", "line svelte-jl9o4u");
-    			add_location(div, file$2, 114, 8, 2863);
+    			attr_dev(div, "class", "line svelte-1m2wrk0");
+    			add_location(div, file$2, 125, 8, 3070);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
     			append_dev(div, t);
     		},
     		p: function update(ctx, dirty) {
-    			if (dirty & /*outputLines*/ 2 && t_value !== (t_value = /*line*/ ctx[8] + "")) set_data_dev(t, t_value);
+    			if (dirty & /*outputLines*/ 2 && t_value !== (t_value = /*line*/ ctx[9] + "")) set_data_dev(t, t_value);
     		},
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(div);
@@ -32092,7 +32092,7 @@ result = defs
     		block,
     		id: create_each_block$2.name,
     		type: "each",
-    		source: "(114:6) {#each outputLines as line}",
+    		source: "(125:6) {#each outputLines as line}",
     		ctx
     	});
 
@@ -32100,11 +32100,13 @@ result = defs
     }
 
     function create_fragment$2(ctx) {
-    	let div2;
+    	let div3;
     	let div0;
-    	let t;
+    	let t0;
     	let div1;
     	let codeeditor;
+    	let t1;
+    	let div2;
     	let current;
     	let each_value = /*outputLines*/ ctx[1];
     	validate_each_argument(each_value);
@@ -32117,8 +32119,8 @@ result = defs
     	codeeditor = new CodeEditor({
     			props: {
     				value: /*pythonCode*/ ctx[0],
-    				onChange: handleCodeChange,
-    				onShiftEnter: /*handleEnter*/ ctx[2],
+    				onChange: /*handleCodeChange*/ ctx[2],
+    				onShiftEnter: /*handleEnter*/ ctx[3],
     				immediateMode: true
     			},
     			$$inline: true
@@ -32126,29 +32128,35 @@ result = defs
 
     	const block = {
     		c: function create() {
-    			div2 = element("div");
+    			div3 = element("div");
     			div0 = element("div");
 
     			for (let i = 0; i < each_blocks.length; i += 1) {
     				each_blocks[i].c();
     			}
 
-    			t = space$1();
+    			t0 = space$1();
     			div1 = element("div");
     			create_component(codeeditor.$$.fragment);
-    			attr_dev(div0, "class", "output svelte-jl9o4u");
-    			add_location(div0, file$2, 112, 4, 2800);
-    			attr_dev(div1, "class", "input-area svelte-jl9o4u");
-    			add_location(div1, file$2, 119, 4, 2984);
-    			attr_dev(div2, "class", "repl svelte-jl9o4u");
-    			add_location(div2, file$2, 110, 2, 2719);
+    			t1 = space$1();
+    			div2 = element("div");
+    			attr_dev(div0, "class", "output svelte-1m2wrk0");
+    			add_location(div0, file$2, 123, 4, 3007);
+    			attr_dev(div1, "id", "code-editor");
+    			attr_dev(div1, "class", "input-area svelte-1m2wrk0");
+    			add_location(div1, file$2, 130, 4, 3191);
+    			attr_dev(div2, "class", "fullscreen svelte-1m2wrk0");
+    			set_style(div2, "display", "none");
+    			add_location(div2, file$2, 133, 4, 3365);
+    			attr_dev(div3, "class", "repl svelte-1m2wrk0");
+    			add_location(div3, file$2, 121, 2, 2926);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
     		m: function mount(target, anchor) {
-    			insert_dev(target, div2, anchor);
-    			append_dev(div2, div0);
+    			insert_dev(target, div3, anchor);
+    			append_dev(div3, div0);
 
     			for (let i = 0; i < each_blocks.length; i += 1) {
     				if (each_blocks[i]) {
@@ -32156,9 +32164,11 @@ result = defs
     				}
     			}
 
-    			append_dev(div2, t);
-    			append_dev(div2, div1);
+    			append_dev(div3, t0);
+    			append_dev(div3, div1);
     			mount_component(codeeditor, div1, null);
+    			append_dev(div3, t1);
+    			append_dev(div3, div2);
     			current = true;
     		},
     		p: function update(ctx, [dirty]) {
@@ -32200,7 +32210,7 @@ result = defs
     			current = false;
     		},
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div2);
+    			if (detaching) detach_dev(div3);
     			destroy_each(each_blocks, detaching);
     			destroy_component(codeeditor);
     		}
@@ -32217,17 +32227,18 @@ result = defs
     	return block;
     }
 
-    function handleCodeChange(newCode) {
-    	
-    } // code = newCode;
-
     function instance$2($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots('PythonREPL', slots, []);
     	const dispatch = createEventDispatcher();
     	let { pyodide } = $$props;
-    	let { pythonCode = `print("Hello, Pyodide!")` } = $$props;
+    	let { pythonCode } = $$props;
     	let executionCount = 0;
+
+    	function handleCodeChange(newCode) {
+    		$$invalidate(0, pythonCode = newCode);
+    		dispatch('update', pythonCode); // Notify parent of the change
+    	}
 
     	// State for the REPL
     	let outputLines = [];
@@ -32283,6 +32294,10 @@ result = defs
     		if (pyodide === undefined && !('pyodide' in $$props || $$self.$$.bound[$$self.$$.props['pyodide']])) {
     			console_1$1.warn("<PythonREPL> was created without expected prop 'pyodide'");
     		}
+
+    		if (pythonCode === undefined && !('pythonCode' in $$props || $$self.$$.bound[$$self.$$.props['pythonCode']])) {
+    			console_1$1.warn("<PythonREPL> was created without expected prop 'pythonCode'");
+    		}
     	});
 
     	const writable_props = ['pyodide', 'pythonCode'];
@@ -32292,7 +32307,7 @@ result = defs
     	});
 
     	$$self.$$set = $$props => {
-    		if ('pyodide' in $$props) $$invalidate(3, pyodide = $$props.pyodide);
+    		if ('pyodide' in $$props) $$invalidate(4, pyodide = $$props.pyodide);
     		if ('pythonCode' in $$props) $$invalidate(0, pythonCode = $$props.pythonCode);
     	};
 
@@ -32312,7 +32327,7 @@ result = defs
     	});
 
     	$$self.$inject_state = $$props => {
-    		if ('pyodide' in $$props) $$invalidate(3, pyodide = $$props.pyodide);
+    		if ('pyodide' in $$props) $$invalidate(4, pyodide = $$props.pyodide);
     		if ('pythonCode' in $$props) $$invalidate(0, pythonCode = $$props.pythonCode);
     		if ('executionCount' in $$props) executionCount = $$props.executionCount;
     		if ('outputLines' in $$props) $$invalidate(1, outputLines = $$props.outputLines);
@@ -32322,13 +32337,13 @@ result = defs
     		$$self.$inject_state($$props.$$inject);
     	}
 
-    	return [pythonCode, outputLines, handleEnter, pyodide];
+    	return [pythonCode, outputLines, handleCodeChange, handleEnter, pyodide];
     }
 
     class PythonREPL extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$2, create_fragment$2, safe_not_equal, { pyodide: 3, pythonCode: 0 });
+    		init(this, options, instance$2, create_fragment$2, safe_not_equal, { pyodide: 4, pythonCode: 0 });
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
@@ -32372,8 +32387,15 @@ result = defs
     	return child_ctx;
     }
 
-    // (39:4) {#each verticalLines as x, i}
-    function create_each_block_1$1(ctx) {
+    function get_each_context_2(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[16] = list[i];
+    	child_ctx[18] = i;
+    	return child_ctx;
+    }
+
+    // (40:6) {#if i % majorInterval !== 0}
+    function create_if_block_1$1(ctx) {
     	let line;
     	let line_x__value;
     	let line_x__value_1;
@@ -32381,22 +32403,22 @@ result = defs
     	const block = {
     		c: function create() {
     			line = svg_element("line");
-    			attr_dev(line, "x1", line_x__value = /*x*/ ctx[19]);
+    			attr_dev(line, "x1", line_x__value = /*x*/ ctx[16]);
     			attr_dev(line, "y1", /*startY*/ ctx[0]);
-    			attr_dev(line, "x2", line_x__value_1 = /*x*/ ctx[19]);
+    			attr_dev(line, "x2", line_x__value_1 = /*x*/ ctx[16]);
     			attr_dev(line, "y2", /*endY*/ ctx[2]);
 
     			attr_dev(line, "class", "" + (null_to_empty(/*i*/ ctx[18] % /*majorInterval*/ ctx[6] === 0
     			? 'major'
     			: 'minor') + " svelte-14d1jc7"));
 
-    			add_location(line, file$1, 39, 6, 1739);
+    			add_location(line, file$1, 40, 8, 1777);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, line, anchor);
     		},
     		p: function update(ctx, dirty) {
-    			if (dirty & /*verticalLines*/ 32 && line_x__value !== (line_x__value = /*x*/ ctx[19])) {
+    			if (dirty & /*verticalLines*/ 32 && line_x__value !== (line_x__value = /*x*/ ctx[16])) {
     				attr_dev(line, "x1", line_x__value);
     			}
 
@@ -32404,7 +32426,7 @@ result = defs
     				attr_dev(line, "y1", /*startY*/ ctx[0]);
     			}
 
-    			if (dirty & /*verticalLines*/ 32 && line_x__value_1 !== (line_x__value_1 = /*x*/ ctx[19])) {
+    			if (dirty & /*verticalLines*/ 32 && line_x__value_1 !== (line_x__value_1 = /*x*/ ctx[16])) {
     				attr_dev(line, "x2", line_x__value_1);
     			}
 
@@ -32419,7 +32441,41 @@ result = defs
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_each_block_1$1.name,
+    		id: create_if_block_1$1.name,
+    		type: "if",
+    		source: "(40:6) {#if i % majorInterval !== 0}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (39:4) {#each verticalLines as x, i}
+    function create_each_block_2(ctx) {
+    	let if_block_anchor;
+    	let if_block = /*i*/ ctx[18] % /*majorInterval*/ ctx[6] !== 0 && create_if_block_1$1(ctx);
+
+    	const block = {
+    		c: function create() {
+    			if (if_block) if_block.c();
+    			if_block_anchor = empty$1();
+    		},
+    		m: function mount(target, anchor) {
+    			if (if_block) if_block.m(target, anchor);
+    			insert_dev(target, if_block_anchor, anchor);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (/*i*/ ctx[18] % /*majorInterval*/ ctx[6] !== 0) if_block.p(ctx, dirty);
+    		},
+    		d: function destroy(detaching) {
+    			if (if_block) if_block.d(detaching);
+    			if (detaching) detach_dev(if_block_anchor);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block_2.name,
     		type: "each",
     		source: "(39:4) {#each verticalLines as x, i}",
     		ctx
@@ -32428,8 +32484,8 @@ result = defs
     	return block;
     }
 
-    // (50:4) {#each horizontalLines as y, i}
-    function create_each_block$1(ctx) {
+    // (52:4) {#each horizontalLines as y, i}
+    function create_each_block_1$1(ctx) {
     	let line;
     	let line_y__value;
     	let line_y__value_1;
@@ -32438,15 +32494,15 @@ result = defs
     		c: function create() {
     			line = svg_element("line");
     			attr_dev(line, "x1", /*startX*/ ctx[1]);
-    			attr_dev(line, "y1", line_y__value = /*y*/ ctx[16]);
+    			attr_dev(line, "y1", line_y__value = /*y*/ ctx[19]);
     			attr_dev(line, "x2", /*endX*/ ctx[3]);
-    			attr_dev(line, "y2", line_y__value_1 = /*y*/ ctx[16]);
+    			attr_dev(line, "y2", line_y__value_1 = /*y*/ ctx[19]);
 
     			attr_dev(line, "class", "" + (null_to_empty(/*i*/ ctx[18] % /*majorInterval*/ ctx[6] === 0
     			? 'major'
     			: 'minor') + " svelte-14d1jc7"));
 
-    			add_location(line, file$1, 50, 6, 1969);
+    			add_location(line, file$1, 52, 6, 2031);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, line, anchor);
@@ -32456,7 +32512,7 @@ result = defs
     				attr_dev(line, "x1", /*startX*/ ctx[1]);
     			}
 
-    			if (dirty & /*horizontalLines*/ 16 && line_y__value !== (line_y__value = /*y*/ ctx[16])) {
+    			if (dirty & /*horizontalLines*/ 16 && line_y__value !== (line_y__value = /*y*/ ctx[19])) {
     				attr_dev(line, "y1", line_y__value);
     			}
 
@@ -32464,7 +32520,7 @@ result = defs
     				attr_dev(line, "x2", /*endX*/ ctx[3]);
     			}
 
-    			if (dirty & /*horizontalLines*/ 16 && line_y__value_1 !== (line_y__value_1 = /*y*/ ctx[16])) {
+    			if (dirty & /*horizontalLines*/ 16 && line_y__value_1 !== (line_y__value_1 = /*y*/ ctx[19])) {
     				attr_dev(line, "y2", line_y__value_1);
     			}
     		},
@@ -32475,9 +32531,99 @@ result = defs
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
+    		id: create_each_block_1$1.name,
+    		type: "each",
+    		source: "(52:4) {#each horizontalLines as y, i}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (64:6) {#if i % majorInterval === 0}
+    function create_if_block$1(ctx) {
+    	let line;
+    	let line_x__value;
+    	let line_x__value_1;
+
+    	const block = {
+    		c: function create() {
+    			line = svg_element("line");
+    			attr_dev(line, "x1", line_x__value = /*x*/ ctx[16]);
+    			attr_dev(line, "y1", /*startY*/ ctx[0]);
+    			attr_dev(line, "x2", line_x__value_1 = /*x*/ ctx[16]);
+    			attr_dev(line, "y2", /*endY*/ ctx[2]);
+
+    			attr_dev(line, "class", "" + (null_to_empty(/*i*/ ctx[18] % /*majorInterval*/ ctx[6] === 0
+    			? 'major'
+    			: 'minor') + " svelte-14d1jc7"));
+
+    			add_location(line, file$1, 64, 8, 2293);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, line, anchor);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty & /*verticalLines*/ 32 && line_x__value !== (line_x__value = /*x*/ ctx[16])) {
+    				attr_dev(line, "x1", line_x__value);
+    			}
+
+    			if (dirty & /*startY*/ 1) {
+    				attr_dev(line, "y1", /*startY*/ ctx[0]);
+    			}
+
+    			if (dirty & /*verticalLines*/ 32 && line_x__value_1 !== (line_x__value_1 = /*x*/ ctx[16])) {
+    				attr_dev(line, "x2", line_x__value_1);
+    			}
+
+    			if (dirty & /*endY*/ 4) {
+    				attr_dev(line, "y2", /*endY*/ ctx[2]);
+    			}
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(line);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block$1.name,
+    		type: "if",
+    		source: "(64:6) {#if i % majorInterval === 0}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (63:4) {#each verticalLines as x, i}
+    function create_each_block$1(ctx) {
+    	let if_block_anchor;
+    	let if_block = /*i*/ ctx[18] % /*majorInterval*/ ctx[6] === 0 && create_if_block$1(ctx);
+
+    	const block = {
+    		c: function create() {
+    			if (if_block) if_block.c();
+    			if_block_anchor = empty$1();
+    		},
+    		m: function mount(target, anchor) {
+    			if (if_block) if_block.m(target, anchor);
+    			insert_dev(target, if_block_anchor, anchor);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (/*i*/ ctx[18] % /*majorInterval*/ ctx[6] === 0) if_block.p(ctx, dirty);
+    		},
+    		d: function destroy(detaching) {
+    			if (if_block) if_block.d(detaching);
+    			if (detaching) detach_dev(if_block_anchor);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
     		id: create_each_block$1.name,
     		type: "each",
-    		source: "(50:4) {#each horizontalLines as y, i}",
+    		source: "(63:4) {#each verticalLines as x, i}",
     		ctx
     	});
 
@@ -32487,7 +32633,16 @@ result = defs
     function create_fragment$1(ctx) {
     	let g;
     	let each0_anchor;
-    	let each_value_1 = /*verticalLines*/ ctx[5];
+    	let each1_anchor;
+    	let each_value_2 = /*verticalLines*/ ctx[5];
+    	validate_each_argument(each_value_2);
+    	let each_blocks_2 = [];
+
+    	for (let i = 0; i < each_value_2.length; i += 1) {
+    		each_blocks_2[i] = create_each_block_2(get_each_context_2(ctx, each_value_2, i));
+    	}
+
+    	let each_value_1 = /*horizontalLines*/ ctx[4];
     	validate_each_argument(each_value_1);
     	let each_blocks_1 = [];
 
@@ -32495,7 +32650,7 @@ result = defs
     		each_blocks_1[i] = create_each_block_1$1(get_each_context_1$1(ctx, each_value_1, i));
     	}
 
-    	let each_value = /*horizontalLines*/ ctx[4];
+    	let each_value = /*verticalLines*/ ctx[5];
     	validate_each_argument(each_value);
     	let each_blocks = [];
 
@@ -32507,11 +32662,17 @@ result = defs
     		c: function create() {
     			g = svg_element("g");
 
+    			for (let i = 0; i < each_blocks_2.length; i += 1) {
+    				each_blocks_2[i].c();
+    			}
+
+    			each0_anchor = empty$1();
+
     			for (let i = 0; i < each_blocks_1.length; i += 1) {
     				each_blocks_1[i].c();
     			}
 
-    			each0_anchor = empty$1();
+    			each1_anchor = empty$1();
 
     			for (let i = 0; i < each_blocks.length; i += 1) {
     				each_blocks[i].c();
@@ -32525,13 +32686,21 @@ result = defs
     		m: function mount(target, anchor) {
     			insert_dev(target, g, anchor);
 
+    			for (let i = 0; i < each_blocks_2.length; i += 1) {
+    				if (each_blocks_2[i]) {
+    					each_blocks_2[i].m(g, null);
+    				}
+    			}
+
+    			append_dev(g, each0_anchor);
+
     			for (let i = 0; i < each_blocks_1.length; i += 1) {
     				if (each_blocks_1[i]) {
     					each_blocks_1[i].m(g, null);
     				}
     			}
 
-    			append_dev(g, each0_anchor);
+    			append_dev(g, each1_anchor);
 
     			for (let i = 0; i < each_blocks.length; i += 1) {
     				if (each_blocks[i]) {
@@ -32541,7 +32710,31 @@ result = defs
     		},
     		p: function update(ctx, [dirty]) {
     			if (dirty & /*verticalLines, startY, endY, majorInterval*/ 101) {
-    				each_value_1 = /*verticalLines*/ ctx[5];
+    				each_value_2 = /*verticalLines*/ ctx[5];
+    				validate_each_argument(each_value_2);
+    				let i;
+
+    				for (i = 0; i < each_value_2.length; i += 1) {
+    					const child_ctx = get_each_context_2(ctx, each_value_2, i);
+
+    					if (each_blocks_2[i]) {
+    						each_blocks_2[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks_2[i] = create_each_block_2(child_ctx);
+    						each_blocks_2[i].c();
+    						each_blocks_2[i].m(g, each0_anchor);
+    					}
+    				}
+
+    				for (; i < each_blocks_2.length; i += 1) {
+    					each_blocks_2[i].d(1);
+    				}
+
+    				each_blocks_2.length = each_value_2.length;
+    			}
+
+    			if (dirty & /*startX, horizontalLines, endX, majorInterval*/ 90) {
+    				each_value_1 = /*horizontalLines*/ ctx[4];
     				validate_each_argument(each_value_1);
     				let i;
 
@@ -32553,7 +32746,7 @@ result = defs
     					} else {
     						each_blocks_1[i] = create_each_block_1$1(child_ctx);
     						each_blocks_1[i].c();
-    						each_blocks_1[i].m(g, each0_anchor);
+    						each_blocks_1[i].m(g, each1_anchor);
     					}
     				}
 
@@ -32564,8 +32757,8 @@ result = defs
     				each_blocks_1.length = each_value_1.length;
     			}
 
-    			if (dirty & /*startX, horizontalLines, endX, majorInterval*/ 90) {
-    				each_value = /*horizontalLines*/ ctx[4];
+    			if (dirty & /*verticalLines, startY, endY, majorInterval*/ 101) {
+    				each_value = /*verticalLines*/ ctx[5];
     				validate_each_argument(each_value);
     				let i;
 
@@ -32592,6 +32785,7 @@ result = defs
     		o: noop,
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(g);
+    			destroy_each(each_blocks_2, detaching);
     			destroy_each(each_blocks_1, detaching);
     			destroy_each(each_blocks, detaching);
     		}
@@ -32809,17 +33003,17 @@ result = defs
 
     function get_each_context(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[76] = list[i];
+    	child_ctx[78] = list[i];
     	return child_ctx;
     }
 
     function get_each_context_1(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[79] = list[i];
+    	child_ctx[81] = list[i];
     	return child_ctx;
     }
 
-    // (885:2) {#if config.grid.visible}
+    // (922:2) {#if config.grid.visible}
     function create_if_block_3(ctx) {
     	let grid;
     	let current;
@@ -32829,8 +33023,8 @@ result = defs
     				cameraX: /*cameraX*/ ctx[4],
     				cameraY: /*cameraY*/ ctx[5],
     				scale: /*scale*/ ctx[6],
-    				width: /*gridWidth*/ ctx[18],
-    				height: /*gridHeight*/ ctx[17]
+    				width: /*gridWidth*/ ctx[19],
+    				height: /*gridHeight*/ ctx[18]
     			},
     			$$inline: true
     		});
@@ -32848,8 +33042,8 @@ result = defs
     			if (dirty[0] & /*cameraX*/ 16) grid_changes.cameraX = /*cameraX*/ ctx[4];
     			if (dirty[0] & /*cameraY*/ 32) grid_changes.cameraY = /*cameraY*/ ctx[5];
     			if (dirty[0] & /*scale*/ 64) grid_changes.scale = /*scale*/ ctx[6];
-    			if (dirty[0] & /*gridWidth*/ 262144) grid_changes.width = /*gridWidth*/ ctx[18];
-    			if (dirty[0] & /*gridHeight*/ 131072) grid_changes.height = /*gridHeight*/ ctx[17];
+    			if (dirty[0] & /*gridWidth*/ 524288) grid_changes.width = /*gridWidth*/ ctx[19];
+    			if (dirty[0] & /*gridHeight*/ 262144) grid_changes.height = /*gridHeight*/ ctx[18];
     			grid.$set(grid_changes);
     		},
     		i: function intro(local) {
@@ -32870,36 +33064,36 @@ result = defs
     		block,
     		id: create_if_block_3.name,
     		type: "if",
-    		source: "(885:2) {#if config.grid.visible}",
+    		source: "(922:2) {#if config.grid.visible}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (888:2) {#if highlightPointer}
+    // (925:2) {#if highlightPointer}
     function create_if_block_2(ctx) {
     	let circle;
 
     	const block = {
     		c: function create() {
     			circle = svg_element("circle");
-    			attr_dev(circle, "cx", /*mouseX*/ ctx[8]);
-    			attr_dev(circle, "cy", /*mouseY*/ ctx[9]);
+    			attr_dev(circle, "cx", /*mouseX*/ ctx[9]);
+    			attr_dev(circle, "cy", /*mouseY*/ ctx[10]);
     			attr_dev(circle, "r", 5);
     			attr_dev(circle, "fill", "#F00");
-    			add_location(circle, file, 888, 3, 28256);
+    			add_location(circle, file, 925, 3, 29735);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, circle, anchor);
     		},
     		p: function update(ctx, dirty) {
-    			if (dirty[0] & /*mouseX*/ 256) {
-    				attr_dev(circle, "cx", /*mouseX*/ ctx[8]);
+    			if (dirty[0] & /*mouseX*/ 512) {
+    				attr_dev(circle, "cx", /*mouseX*/ ctx[9]);
     			}
 
-    			if (dirty[0] & /*mouseY*/ 512) {
-    				attr_dev(circle, "cy", /*mouseY*/ ctx[9]);
+    			if (dirty[0] & /*mouseY*/ 1024) {
+    				attr_dev(circle, "cy", /*mouseY*/ ctx[10]);
     			}
     		},
     		d: function destroy(detaching) {
@@ -32911,21 +33105,21 @@ result = defs
     		block,
     		id: create_if_block_2.name,
     		type: "if",
-    		source: "(888:2) {#if highlightPointer}",
+    		source: "(925:2) {#if highlightPointer}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (897:3) {#each graphData.connections as conn}
+    // (934:3) {#each graphData.connections as conn}
     function create_each_block_1(ctx) {
     	let link;
     	let current;
 
     	link = new Link({
     			props: {
-    				path: /*computePathData*/ ctx[32](/*conn*/ ctx[79])
+    				path: /*computePathData*/ ctx[32](/*conn*/ ctx[81])
     			},
     			$$inline: true
     		});
@@ -32940,7 +33134,7 @@ result = defs
     		},
     		p: function update(ctx, dirty) {
     			const link_changes = {};
-    			if (dirty[0] & /*graphData*/ 2) link_changes.path = /*computePathData*/ ctx[32](/*conn*/ ctx[79]);
+    			if (dirty[0] & /*graphData*/ 2) link_changes.path = /*computePathData*/ ctx[32](/*conn*/ ctx[81]);
     			link.$set(link_changes);
     		},
     		i: function intro(local) {
@@ -32961,31 +33155,31 @@ result = defs
     		block,
     		id: create_each_block_1.name,
     		type: "each",
-    		source: "(897:3) {#each graphData.connections as conn}",
+    		source: "(934:3) {#each graphData.connections as conn}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (903:3) {#each graphData.nodes as node (node.id)}
+    // (940:3) {#each graphData.nodes as node (node.id)}
     function create_each_block(key_1, ctx) {
     	let first;
     	let node;
     	let current;
 
     	function drag_handler(...args) {
-    		return /*drag_handler*/ ctx[43](/*node*/ ctx[76], ...args);
+    		return /*drag_handler*/ ctx[42](/*node*/ ctx[78], ...args);
     	}
 
     	function select_handler() {
-    		return /*select_handler*/ ctx[44](/*node*/ ctx[76]);
+    		return /*select_handler*/ ctx[43](/*node*/ ctx[78]);
     	}
 
     	node = new Node({
     			props: {
-    				node: /*node*/ ctx[76],
-    				selectedNodeId: /*selectedNodeId*/ ctx[10],
+    				node: /*node*/ ctx[78],
+    				selectedNodeId: /*selectedNodeId*/ ctx[11],
     				screenToGraphCoords: /*screenToGraphCoords*/ ctx[27]
     			},
     			$$inline: true
@@ -33011,8 +33205,8 @@ result = defs
     		p: function update(new_ctx, dirty) {
     			ctx = new_ctx;
     			const node_changes = {};
-    			if (dirty[0] & /*graphData*/ 2) node_changes.node = /*node*/ ctx[76];
-    			if (dirty[0] & /*selectedNodeId*/ 1024) node_changes.selectedNodeId = /*selectedNodeId*/ ctx[10];
+    			if (dirty[0] & /*graphData*/ 2) node_changes.node = /*node*/ ctx[78];
+    			if (dirty[0] & /*selectedNodeId*/ 2048) node_changes.selectedNodeId = /*selectedNodeId*/ ctx[11];
     			node.$set(node_changes);
     		},
     		i: function intro(local) {
@@ -33034,32 +33228,32 @@ result = defs
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(903:3) {#each graphData.nodes as node (node.id)}",
+    		source: "(940:3) {#each graphData.nodes as node (node.id)}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (915:2) {#if activeConnection}
+    // (952:2) {#if activeConnection}
     function create_if_block_1(ctx) {
     	let path;
 
     	const block = {
     		c: function create() {
     			path = svg_element("path");
-    			attr_dev(path, "d", /*ghostPath*/ ctx[16]);
+    			attr_dev(path, "d", /*ghostPath*/ ctx[17]);
     			attr_dev(path, "stroke", config$1.link.active.color);
     			attr_dev(path, "stroke-width", config$1.link.active.stroke_width);
     			attr_dev(path, "fill", "none");
-    			add_location(path, file, 915, 3, 28953);
+    			add_location(path, file, 952, 3, 30432);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, path, anchor);
     		},
     		p: function update(ctx, dirty) {
-    			if (dirty[0] & /*ghostPath*/ 65536) {
-    				attr_dev(path, "d", /*ghostPath*/ ctx[16]);
+    			if (dirty[0] & /*ghostPath*/ 131072) {
+    				attr_dev(path, "d", /*ghostPath*/ ctx[17]);
     			}
     		},
     		d: function destroy(detaching) {
@@ -33071,14 +33265,14 @@ result = defs
     		block,
     		id: create_if_block_1.name,
     		type: "if",
-    		source: "(915:2) {#if activeConnection}",
+    		source: "(952:2) {#if activeConnection}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (923:1) {#if showCommandPalette}
+    // (960:1) {#if showCommandPalette}
     function create_if_block(ctx) {
     	let div;
     	let commandpalette;
@@ -33089,14 +33283,14 @@ result = defs
     			$$inline: true
     		});
 
-    	commandpalette.$on("selectCommand", /*selectCommand_handler*/ ctx[46]);
+    	commandpalette.$on("selectCommand", /*selectCommand_handler*/ ctx[45]);
 
     	const block = {
     		c: function create() {
     			div = element("div");
     			create_component(commandpalette.$$.fragment);
     			attr_dev(div, "class", "command-palette-overlay svelte-a2ukll");
-    			add_location(div, file, 923, 3, 29298);
+    			add_location(div, file, 960, 3, 30777);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -33123,7 +33317,7 @@ result = defs
     		block,
     		id: create_if_block.name,
     		type: "if",
-    		source: "(923:1) {#if showCommandPalette}",
+    		source: "(960:1) {#if showCommandPalette}",
     		ctx
     	});
 
@@ -33153,7 +33347,7 @@ result = defs
     	let current;
     	let mounted;
     	let dispose;
-    	add_render_callback(/*onwindowresize*/ ctx[40]);
+    	add_render_callback(/*onwindowresize*/ ctx[39]);
     	let if_block0 = config$1.grid.visible && create_if_block_3(ctx);
     	let if_block1 = /*highlightPointer*/ ctx[21] && create_if_block_2(ctx);
     	let each_value_1 = /*graphData*/ ctx[1].connections;
@@ -33170,7 +33364,7 @@ result = defs
 
     	let each_value = /*graphData*/ ctx[1].nodes;
     	validate_each_argument(each_value);
-    	const get_key = ctx => /*node*/ ctx[76].id;
+    	const get_key = ctx => /*node*/ ctx[78].id;
     	validate_each_keys(ctx, each_value, get_each_context, get_key);
 
     	for (let i = 0; i < each_value.length; i += 1) {
@@ -33180,17 +33374,18 @@ result = defs
     	}
 
     	let if_block2 = /*activeConnection*/ ctx[0] && create_if_block_1(ctx);
-    	let if_block3 = /*showCommandPalette*/ ctx[11] && create_if_block(ctx);
+    	let if_block3 = /*showCommandPalette*/ ctx[12] && create_if_block(ctx);
 
     	pythonrepl = new PythonREPL({
     			props: {
     				pyodide: /*pyodide*/ ctx[20],
-    				pythonCode: /*pythonCode*/ ctx[19]
+    				pythonCode: /*pythonCode*/ ctx[8]
     			},
     			$$inline: true
     		});
 
     	pythonrepl.$on("pyodideLoaded", /*onPyodideReady*/ ctx[35]);
+    	pythonrepl.$on("update", /*update_handler*/ ctx[46]);
 
     	const block = {
     		c: function create() {
@@ -33228,29 +33423,29 @@ result = defs
     			attr_dev(input0, "type", "file");
     			attr_dev(input0, "accept", "application/json");
     			set_style(input0, "display", "none");
-    			add_location(input0, file, 854, 1, 27503);
+    			add_location(input0, file, 891, 1, 28982);
     			attr_dev(input1, "type", "file");
     			attr_dev(input1, "accept", "application/json");
     			set_style(input1, "display", "none");
-    			add_location(input1, file, 863, 2, 27695);
-    			attr_dev(path, "d", /*ghostCutPath*/ ctx[15]);
+    			add_location(input1, file, 900, 2, 29174);
+    			attr_dev(path, "d", /*ghostCutPath*/ ctx[16]);
     			attr_dev(path, "stroke", config$1.link.cut.color);
     			attr_dev(path, "stroke-width", config$1.link.cut.stroke_width);
     			attr_dev(path, "fill", "none");
-    			add_location(path, file, 919, 2, 29141);
+    			add_location(path, file, 956, 2, 30620);
     			attr_dev(svg, "id", "mySvg");
     			attr_dev(svg, "width", "100%");
     			attr_dev(svg, "height", "100%");
-    			attr_dev(svg, "viewBox", /*viewBoxString*/ ctx[14]);
+    			attr_dev(svg, "viewBox", /*viewBoxString*/ ctx[15]);
     			attr_dev(svg, "preserveAspectRatio", "none");
-    			add_location(svg, file, 875, 1, 27945);
+    			add_location(svg, file, 912, 1, 29424);
     			attr_dev(div0, "class", "canvas svelte-a2ukll");
-    			add_location(div0, file, 846, 0, 27315);
+    			add_location(div0, file, 883, 0, 28794);
     			attr_dev(div1, "id", "MPL-container");
     			set_style(div1, "position", "absolute");
     			set_style(div1, "top", "0");
-    			add_location(div1, file, 931, 1, 29546);
-    			add_location(div2, file, 930, 0, 29539);
+    			add_location(div1, file, 968, 1, 31066);
+    			add_location(div2, file, 967, 0, 31059);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -33258,10 +33453,10 @@ result = defs
     		m: function mount(target, anchor) {
     			insert_dev(target, div0, anchor);
     			append_dev(div0, input0);
-    			/*input0_binding*/ ctx[41](input0);
+    			/*input0_binding*/ ctx[40](input0);
     			append_dev(div0, t0);
     			append_dev(div0, input1);
-    			/*input1_binding*/ ctx[42](input1);
+    			/*input1_binding*/ ctx[41](input1);
     			append_dev(div0, t1);
     			append_dev(div0, svg);
     			if (if_block0) if_block0.m(svg, null);
@@ -33286,7 +33481,7 @@ result = defs
     			append_dev(svg, each1_anchor);
     			if (if_block2) if_block2.m(svg, null);
     			append_dev(svg, path);
-    			/*svg_binding*/ ctx[45](svg);
+    			/*svg_binding*/ ctx[44](svg);
     			append_dev(div0, t2);
     			if (if_block3) if_block3.m(div0, null);
     			insert_dev(target, t3, anchor);
@@ -33298,7 +33493,7 @@ result = defs
 
     			if (!mounted) {
     				dispose = [
-    					listen_dev(window_1, "resize", /*onwindowresize*/ ctx[40]),
+    					listen_dev(window_1, "resize", /*onwindowresize*/ ctx[39]),
     					listen_dev(input0, "change", /*handleFileChange*/ ctx[26], false, false, false, false),
     					listen_dev(input1, "change", /*handleNodeFileChange*/ ctx[25], false, false, false, false),
     					listen_dev(svg, "mousemove", /*handleMouseMove*/ ctx[29], false, false, false, false),
@@ -33342,7 +33537,7 @@ result = defs
     				check_outros();
     			}
 
-    			if (dirty[0] & /*graphData, selectedNodeId, screenToGraphCoords, handleSocketPointerDown*/ 138413058 | dirty[1] & /*updateNodePosition, selectNode*/ 12) {
+    			if (dirty[0] & /*graphData, selectedNodeId, screenToGraphCoords, handleSocketPointerDown*/ 138414082 | dirty[1] & /*updateNodePosition, selectNode*/ 12) {
     				each_value = /*graphData*/ ctx[1].nodes;
     				validate_each_argument(each_value);
     				group_outros();
@@ -33364,19 +33559,19 @@ result = defs
     				if_block2 = null;
     			}
 
-    			if (!current || dirty[0] & /*ghostCutPath*/ 32768) {
-    				attr_dev(path, "d", /*ghostCutPath*/ ctx[15]);
+    			if (!current || dirty[0] & /*ghostCutPath*/ 65536) {
+    				attr_dev(path, "d", /*ghostCutPath*/ ctx[16]);
     			}
 
-    			if (!current || dirty[0] & /*viewBoxString*/ 16384) {
-    				attr_dev(svg, "viewBox", /*viewBoxString*/ ctx[14]);
+    			if (!current || dirty[0] & /*viewBoxString*/ 32768) {
+    				attr_dev(svg, "viewBox", /*viewBoxString*/ ctx[15]);
     			}
 
-    			if (/*showCommandPalette*/ ctx[11]) {
+    			if (/*showCommandPalette*/ ctx[12]) {
     				if (if_block3) {
     					if_block3.p(ctx, dirty);
 
-    					if (dirty[0] & /*showCommandPalette*/ 2048) {
+    					if (dirty[0] & /*showCommandPalette*/ 4096) {
     						transition_in(if_block3, 1);
     					}
     				} else {
@@ -33396,7 +33591,7 @@ result = defs
     			}
 
     			const pythonrepl_changes = {};
-    			if (dirty[0] & /*pythonCode*/ 524288) pythonrepl_changes.pythonCode = /*pythonCode*/ ctx[19];
+    			if (dirty[0] & /*pythonCode*/ 256) pythonrepl_changes.pythonCode = /*pythonCode*/ ctx[8];
     			pythonrepl.$set(pythonrepl_changes);
     		},
     		i: function intro(local) {
@@ -33433,8 +33628,8 @@ result = defs
     		},
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(div0);
-    			/*input0_binding*/ ctx[41](null);
-    			/*input1_binding*/ ctx[42](null);
+    			/*input0_binding*/ ctx[40](null);
+    			/*input1_binding*/ ctx[41](null);
     			if (if_block0) if_block0.d();
     			if (if_block1) if_block1.d();
     			destroy_each(each_blocks_1, detaching);
@@ -33444,7 +33639,7 @@ result = defs
     			}
 
     			if (if_block2) if_block2.d();
-    			/*svg_binding*/ ctx[45](null);
+    			/*svg_binding*/ ctx[44](null);
     			if (if_block3) if_block3.d();
     			if (detaching) detach_dev(t3);
     			destroy_component(pythonrepl, detaching);
@@ -33471,6 +33666,13 @@ result = defs
     function computeActiveCutConnectionPath(active, start, to) {
     	if (!active) return "";
     	return `M ${start.x} ${start.y} L ${to.x} ${to.y}`;
+    }
+
+    function toggleFullscreenEditor() {
+    	let el = document.getElementById('code-editor');
+
+    	// add fullscreen class to element
+    	el.classList.toggle("fullscreen");
     }
 
     function saveAsSVG() {
@@ -33509,7 +33711,6 @@ result = defs
     }
 
     function instance($$self, $$props, $$invalidate) {
-    	let pythonCode;
     	let gridWidth;
     	let gridHeight;
     	let ghostPath;
@@ -33518,12 +33719,13 @@ result = defs
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots('App', slots, []);
     	let pyodide; // Pyodide instance
-    	let userCode = `print("Hello, ROON!")`;
+    	let pythonCode = `print("Hello ROON")`;
 
     	// some debug stuff
     	let highlightPointer = false;
 
     	let highlightPosition = { x: 0, y: 0 };
+    	let lastKey = null; // track last key for double escape
 
     	window.addEventListener('pywebviewready', function () {
     		console.log("pywebviewready");
@@ -33865,8 +34067,47 @@ result = defs
     			callable: () => {
     				showGeneratedScript();
     			}
+    		},
+    		{
+    			name: 'Toggle Fullscreen Editor',
+    			callable: () => {
+    				toggleFullscreenEditor();
+    			}
+    		},
+    		{
+    			name: 'Source2Nodes',
+    			callable: sourceToNodes
     		}
     	];
+
+    	async function sourceToNodes() {
+    		console.log("converting source to nodes");
+    		console.log("Current code: ", pythonCode);
+
+    		// let fileExtension = fileName.split('.').pop();, we could check for .py?
+    		let response = await runPython2JSON(`${pythonCode}`, 'source');
+
+    		let node_defs = response["result"];
+    		console.log("NodeDefs: ", node_defs);
+
+    		if (node_defs) {
+    			for (const name in node_defs) {
+    				let def = JSON.parse(node_defs[name]);
+
+    				// delete the def.id so that a new id is assigned when the node is added
+    				delete def.id;
+
+    				commands.push({
+    					name: "inline : " + name + "  (:n)",
+    					callable: () => {
+    						addNodeToGraph(def);
+    					}
+    				});
+
+    				executor.stdoutHandler(`Node Added: ${name}`);
+    			}
+    		}
+    	}
 
     	async function showGeneratedScript() {
     		let generated_script = await runEngine(graphData, false);
@@ -33877,12 +34118,12 @@ result = defs
     		}
 
     		// userCode = generated_script;
-    		$$invalidate(36, userCode = generated_script["result"]);
+    		userCode = generated_script["result"];
 
     		console.log("Generated Script: ", generated_script);
     	}
 
-    	async function loadNodesFromPythonSource(known_path = null) {
+    	async function loadNodesFromPythonSource(known_path = null, type) {
     		console.log("LoadNodesFromPythonSource: ", known_path);
     		let path = known_path;
 
@@ -33976,7 +34217,7 @@ result = defs
     			cmd.callable();
     		}
 
-    		$$invalidate(11, showCommandPalette = false);
+    		$$invalidate(12, showCommandPalette = false);
     	}
 
     	function addNode() {
@@ -34023,7 +34264,7 @@ result = defs
     		pushCommand(cmd);
     		$$invalidate(1, graphData.nodes = graphData.nodes.filter(n => n.id !== selectedNodeId), graphData);
     		$$invalidate(1, graphData.connections = graphData.connections.filter(conn => conn.from.node !== selectedNodeId && conn.to.node !== selectedNodeId), graphData);
-    		$$invalidate(10, selectedNodeId = null);
+    		$$invalidate(11, selectedNodeId = null);
     	}
 
     	/* ---------------------------------------------------------------------------
@@ -34179,9 +34420,9 @@ result = defs
 
     		// save starting mouse position and camera position
     		if (e.button === 0 && e.target.tagName === 'svg') {
-    			$$invalidate(10, selectedNodeId = null);
-    			$$invalidate(38, mouseGraphCoords = $$invalidate(37, startGraphCoords = screenToGraphCoords(e.clientX, e.clientY)));
-    			$$invalidate(39, activeCutConnection = true);
+    			$$invalidate(11, selectedNodeId = null);
+    			$$invalidate(37, mouseGraphCoords = $$invalidate(36, startGraphCoords = screenToGraphCoords(e.clientX, e.clientY)));
+    			$$invalidate(38, activeCutConnection = true);
 
     			// unfocus
     			document.activeElement.blur();
@@ -34192,9 +34433,9 @@ result = defs
     		// console.debug( "MouseMove" );
     		const { x, y } = screenToGraphCoords(e.clientX, e.clientY);
 
-    		$$invalidate(8, mouseX = x);
-    		$$invalidate(9, mouseY = y);
-    		$$invalidate(38, mouseGraphCoords = { x, y });
+    		$$invalidate(9, mouseX = x);
+    		$$invalidate(10, mouseY = y);
+    		$$invalidate(37, mouseGraphCoords = { x, y });
     	} // console.log( "CutPAth: ", computeActiveCutConnectionPath() );
 
     	function handleMouseUp(e) {
@@ -34203,7 +34444,7 @@ result = defs
     		// handle link disconnect
     		checkCutIntersections();
 
-    		$$invalidate(39, activeCutConnection = null);
+    		$$invalidate(38, activeCutConnection = null);
     	}
 
     	function handleCameraZoom(direction) {
@@ -34251,15 +34492,28 @@ result = defs
     	// WASD panning + +/- zoom
     	function handleKeyDown(e) {
     		if (e.key === 'Escape') {
-    			$$invalidate(10, selectedNodeId = null);
+    			$$invalidate(11, selectedNodeId = null);
+
+    			//get currently focussed element
+    			let focussed = document.activeElement;
 
     			// remove focus from inputs
     			document.activeElement.blur();
+
+    			// determine if element 'code-editor' has `fullscreen` class
+    			let isFullscreen = document.getElementById('code-editor').classList.contains("fullscreen");
+
+    			// this basically requires a double escape to minimize
+    			if (isFullscreen && !focussed.classList.contains("cm-content")) {
+    				toggleFullscreenEditor();
+    			}
 
     			let mpl = document.getElementById('MPL-container');
 
     			// hide the mpl container
     			mpl.style.display = "none";
+
+    			lastKey = e.key;
     		}
 
     		if (e.target.tagName === 'INPUT') return;
@@ -34294,7 +34548,7 @@ result = defs
     			} else if ((e.metaKey || e.ctrlKey) && e.key === 'y') {
     				redo();
     			} else if (e.key === 'Escape') {
-    				$$invalidate(10, selectedNodeId = null);
+    				$$invalidate(11, selectedNodeId = null);
 
     				// remove focus from inputs
     				document.activeElement.blur();
@@ -34305,12 +34559,12 @@ result = defs
 
     		// Toggle command palette
     		if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.code === 'KeyP') {
-    			$$invalidate(11, showCommandPalette = !showCommandPalette);
+    			$$invalidate(12, showCommandPalette = !showCommandPalette);
     		}
 
     		// Add this condition to close the command palette when Esc is pressed
     		if (e.key === 'Escape' && showCommandPalette) {
-    			$$invalidate(11, showCommandPalette = false);
+    			$$invalidate(12, showCommandPalette = false);
     		}
     	}
 
@@ -34359,7 +34613,7 @@ result = defs
     	}
 
     	function selectNode(id) {
-    		$$invalidate(10, selectedNodeId = id);
+    		$$invalidate(11, selectedNodeId = id);
     	}
 
     	function updateNodePosition(id, x, y) {
@@ -34394,14 +34648,14 @@ result = defs
     	function input0_binding($$value) {
     		binding_callbacks[$$value ? 'unshift' : 'push'](() => {
     			fileInputRef = $$value;
-    			$$invalidate(13, fileInputRef);
+    			$$invalidate(14, fileInputRef);
     		});
     	}
 
     	function input1_binding($$value) {
     		binding_callbacks[$$value ? 'unshift' : 'push'](() => {
     			nodeFileInputRef = $$value;
-    			$$invalidate(12, nodeFileInputRef);
+    			$$invalidate(13, nodeFileInputRef);
     		});
     	}
 
@@ -34417,6 +34671,10 @@ result = defs
 
     	const selectCommand_handler = e => handleCommand(e.detail);
 
+    	const update_handler = e => {
+    		$$invalidate(8, pythonCode = e.detail);
+    	};
+
     	$$self.$capture_state = () => ({
     		onMount,
     		Node,
@@ -34430,9 +34688,10 @@ result = defs
     		config: config$1,
     		Grid,
     		pyodide,
-    		userCode,
+    		pythonCode,
     		highlightPointer,
     		highlightPosition,
+    		lastKey,
     		commandHistory,
     		commandIndex,
     		pushCommand,
@@ -34457,6 +34716,8 @@ result = defs
     		selectedNodeId,
     		showCommandPalette,
     		commands,
+    		sourceToNodes,
+    		toggleFullscreenEditor,
     		showGeneratedScript,
     		loadNodesFromPythonSource,
     		generateScriptAndSave,
@@ -34500,30 +34761,30 @@ result = defs
     		ghostCutPath,
     		ghostPath,
     		gridHeight,
-    		gridWidth,
-    		pythonCode
+    		gridWidth
     	});
 
     	$$self.$inject_state = $$props => {
     		if ('pyodide' in $$props) $$invalidate(20, pyodide = $$props.pyodide);
-    		if ('userCode' in $$props) $$invalidate(36, userCode = $$props.userCode);
+    		if ('pythonCode' in $$props) $$invalidate(8, pythonCode = $$props.pythonCode);
     		if ('highlightPointer' in $$props) $$invalidate(21, highlightPointer = $$props.highlightPointer);
     		if ('highlightPosition' in $$props) highlightPosition = $$props.highlightPosition;
+    		if ('lastKey' in $$props) lastKey = $$props.lastKey;
     		if ('commandHistory' in $$props) commandHistory = $$props.commandHistory;
     		if ('commandIndex' in $$props) commandIndex = $$props.commandIndex;
-    		if ('startGraphCoords' in $$props) $$invalidate(37, startGraphCoords = $$props.startGraphCoords);
-    		if ('mouseGraphCoords' in $$props) $$invalidate(38, mouseGraphCoords = $$props.mouseGraphCoords);
-    		if ('activeCutConnection' in $$props) $$invalidate(39, activeCutConnection = $$props.activeCutConnection);
+    		if ('startGraphCoords' in $$props) $$invalidate(36, startGraphCoords = $$props.startGraphCoords);
+    		if ('mouseGraphCoords' in $$props) $$invalidate(37, mouseGraphCoords = $$props.mouseGraphCoords);
+    		if ('activeCutConnection' in $$props) $$invalidate(38, activeCutConnection = $$props.activeCutConnection);
     		if ('activeConnection' in $$props) $$invalidate(0, activeConnection = $$props.activeConnection);
     		if ('hoveredSocket' in $$props) hoveredSocket = $$props.hoveredSocket;
-    		if ('mouseX' in $$props) $$invalidate(8, mouseX = $$props.mouseX);
-    		if ('mouseY' in $$props) $$invalidate(9, mouseY = $$props.mouseY);
+    		if ('mouseX' in $$props) $$invalidate(9, mouseX = $$props.mouseX);
+    		if ('mouseY' in $$props) $$invalidate(10, mouseY = $$props.mouseY);
     		if ('graphData' in $$props) $$invalidate(1, graphData = $$props.graphData);
-    		if ('selectedNodeId' in $$props) $$invalidate(10, selectedNodeId = $$props.selectedNodeId);
-    		if ('showCommandPalette' in $$props) $$invalidate(11, showCommandPalette = $$props.showCommandPalette);
+    		if ('selectedNodeId' in $$props) $$invalidate(11, selectedNodeId = $$props.selectedNodeId);
+    		if ('showCommandPalette' in $$props) $$invalidate(12, showCommandPalette = $$props.showCommandPalette);
     		if ('commands' in $$props) $$invalidate(23, commands = $$props.commands);
-    		if ('nodeFileInputRef' in $$props) $$invalidate(12, nodeFileInputRef = $$props.nodeFileInputRef);
-    		if ('fileInputRef' in $$props) $$invalidate(13, fileInputRef = $$props.fileInputRef);
+    		if ('nodeFileInputRef' in $$props) $$invalidate(13, nodeFileInputRef = $$props.nodeFileInputRef);
+    		if ('fileInputRef' in $$props) $$invalidate(14, fileInputRef = $$props.fileInputRef);
     		if ('baseWidth' in $$props) $$invalidate(2, baseWidth = $$props.baseWidth);
     		if ('baseHeight' in $$props) $$invalidate(3, baseHeight = $$props.baseHeight);
     		if ('cameraX' in $$props) $$invalidate(4, cameraX = $$props.cameraX);
@@ -34532,12 +34793,11 @@ result = defs
     		if ('svgRef' in $$props) $$invalidate(7, svgRef = $$props.svgRef);
     		if ('svgWidth' in $$props) svgWidth = $$props.svgWidth;
     		if ('svgHeight' in $$props) svgHeight = $$props.svgHeight;
-    		if ('viewBoxString' in $$props) $$invalidate(14, viewBoxString = $$props.viewBoxString);
-    		if ('ghostCutPath' in $$props) $$invalidate(15, ghostCutPath = $$props.ghostCutPath);
-    		if ('ghostPath' in $$props) $$invalidate(16, ghostPath = $$props.ghostPath);
-    		if ('gridHeight' in $$props) $$invalidate(17, gridHeight = $$props.gridHeight);
-    		if ('gridWidth' in $$props) $$invalidate(18, gridWidth = $$props.gridWidth);
-    		if ('pythonCode' in $$props) $$invalidate(19, pythonCode = $$props.pythonCode);
+    		if ('viewBoxString' in $$props) $$invalidate(15, viewBoxString = $$props.viewBoxString);
+    		if ('ghostCutPath' in $$props) $$invalidate(16, ghostCutPath = $$props.ghostCutPath);
+    		if ('ghostPath' in $$props) $$invalidate(17, ghostPath = $$props.ghostPath);
+    		if ('gridHeight' in $$props) $$invalidate(18, gridHeight = $$props.gridHeight);
+    		if ('gridWidth' in $$props) $$invalidate(19, gridWidth = $$props.gridWidth);
     	};
 
     	if ($$props && "$$inject" in $$props) {
@@ -34545,25 +34805,21 @@ result = defs
     	}
 
     	$$self.$$.update = () => {
-    		if ($$self.$$.dirty[1] & /*userCode*/ 32) {
-    			$$invalidate(19, pythonCode = userCode);
-    		}
-
     		if ($$self.$$.dirty[0] & /*baseWidth, scale*/ 68) {
-    			$$invalidate(18, gridWidth = baseWidth / scale);
+    			$$invalidate(19, gridWidth = baseWidth / scale);
     		}
 
     		if ($$self.$$.dirty[0] & /*baseHeight, scale*/ 72) {
-    			$$invalidate(17, gridHeight = baseHeight / scale);
+    			$$invalidate(18, gridHeight = baseHeight / scale);
     		}
 
     		if ($$self.$$.dirty[0] & /*activeConnection*/ 1) {
     			// Reactive statement: recalc whenever activeConnection changes
-    			$$invalidate(16, ghostPath = computeActiveConnectionPath(activeConnection));
+    			$$invalidate(17, ghostPath = computeActiveConnectionPath(activeConnection));
     		}
 
-    		if ($$self.$$.dirty[1] & /*activeCutConnection, startGraphCoords, mouseGraphCoords*/ 448) {
-    			$$invalidate(15, ghostCutPath = computeActiveCutConnectionPath(activeCutConnection, startGraphCoords, mouseGraphCoords));
+    		if ($$self.$$.dirty[1] & /*activeCutConnection, startGraphCoords, mouseGraphCoords*/ 224) {
+    			$$invalidate(16, ghostCutPath = computeActiveCutConnectionPath(activeCutConnection, startGraphCoords, mouseGraphCoords));
     		}
 
     		if ($$self.$$.dirty[0] & /*graphData*/ 2) {
@@ -34583,7 +34839,7 @@ result = defs
 
     		if ($$self.$$.dirty[0] & /*cameraX, cameraY, baseWidth, scale, baseHeight*/ 124) {
     			// The final derived viewBox, updated whenever cameraX, cameraY, or scale changes
-    			$$invalidate(14, viewBoxString = `${cameraX} ${cameraY} ${baseWidth / scale} ${baseHeight / scale}`);
+    			$$invalidate(15, viewBoxString = `${cameraX} ${cameraY} ${baseWidth / scale} ${baseHeight / scale}`);
     		}
     	};
 
@@ -34596,6 +34852,7 @@ result = defs
     		cameraY,
     		scale,
     		svgRef,
+    		pythonCode,
     		mouseX,
     		mouseY,
     		selectedNodeId,
@@ -34607,7 +34864,6 @@ result = defs
     		ghostPath,
     		gridHeight,
     		gridWidth,
-    		pythonCode,
     		pyodide,
     		highlightPointer,
     		handleSocketPointerDown,
@@ -34624,7 +34880,6 @@ result = defs
     		selectNode,
     		updateNodePosition,
     		onPyodideReady,
-    		userCode,
     		startGraphCoords,
     		mouseGraphCoords,
     		activeCutConnection,
@@ -34634,7 +34889,8 @@ result = defs
     		drag_handler,
     		select_handler,
     		svg_binding,
-    		selectCommand_handler
+    		selectCommand_handler,
+    		update_handler
     	];
     }
 

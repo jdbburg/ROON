@@ -16,21 +16,38 @@ base_dir = None
 # Path to your Svelte app's build folder
 svelte_build_dir = os.path.abspath("./roon/static/svelte")  # Adjust path as needed
 
+# Global server reference for clean shutdown
+httpd = None
+
 # Serve the Svelte app locally
 def start_server():
-    
+    global httpd
 
     """Start an HTTP server to serve Svelte static files."""
-    # Use importlib.resources to get the path to static/svelte in the package
-    with resources.path("roon", "static") as static_path:
-        svelte_build_dir = os.path.join(static_path, "svelte")
-        if not os.path.exists(svelte_build_dir):
-            raise FileNotFoundError(f"Svelte build directory not found: {svelte_build_dir}")
+    # Determine if running from source or installed package
+    if "roon" in sys.modules and hasattr(sys.modules["roon"], "__file__"):
+        # Running from source directory
+        module_dir = os.path.dirname(os.path.abspath(__file__))
+        # svelte_build_dir = os.path.join(module_dir, "static", "svelte")
+        svelte_build_dir = os.path.abspath("./public/")
+        print("Using local build dir")
+    else:
+        # Running from installed package
+        with resources.path("roon.static", "svelte") as svelte_path:
+            svelte_build_dir = str(svelte_path)
 
-        os.chdir(svelte_build_dir)
+    if not os.path.exists(svelte_build_dir):
+        raise FileNotFoundError(f"Svelte build directory not found: {svelte_build_dir}")
+
+    os.chdir(svelte_build_dir)
     PORT = 8000
     Handler = http.server.SimpleHTTPRequestHandler
-    httpd = socketserver.TCPServer(("", PORT), Handler)
+    # Custom TCPServer with SO_REUSEADDR
+    class ReuseTCPServer(socketserver.TCPServer):
+        allow_reuse_address = True  # Enable port reuse
+
+    # Start the server
+    httpd = ReuseTCPServer(("", PORT), Handler)
 
     # Run server in a separate thread
     server_thread = threading.Thread(target=httpd.serve_forever)
@@ -43,23 +60,6 @@ def start_server():
 exec_globals = {}
 exec_locals = {}
 class Api:
-
-    # def source_to_json_nodes(self, module_path):
-    #     # Call the function from the snippet above
-    #     try: 
-    #         node_defs = allpy2json.analyze_module_functions(module_path) 
-    #     except Exception as e:
-    #         return {
-    #             "result": None,
-    #             "output": None,
-    #             "error": str(e)
-    #         }
-    #     return {
-    #             "result": node_defs,
-    #             "output": node_defs,
-    #             "error": None
-    #         }
-
     def run_python(self, code, globals=None, locals=None):
         old_dir = os.getcwd()
         try:
@@ -121,6 +121,17 @@ def full_setup():
       window.is_pywebview = true; // Custom flag
       console.log("PyWebView flag set");
     """)
+
+    # Cleanup on window close
+    def on_closed():
+        global httpd
+        if httpd:
+            print("Shutting down server...")
+            httpd.shutdown()
+            httpd.server_close()
+            httpd = None
+    
+    window.events.closed += on_closed
 
     webview.start(debug=True)
 
