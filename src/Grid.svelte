@@ -37,13 +37,15 @@
     <g>
     <!-- Vertical lines -->
     {#each verticalLines as x, i}
-      <line
-        x1={x}
-        y1={startY}
-        x2={x}
-        y2={endY}
-        class={i % majorInterval === 0 ? 'major' : 'minor'}
-      />
+      {#if i % majorInterval !== 0}
+        <line
+          x1={x}
+          y1={startY}
+          x2={x}
+          y2={endY}
+          class={i % majorInterval === 0 ? 'major' : 'minor'}
+        />
+      {/if}
     {/each}
   
     <!-- Horizontal lines -->
@@ -55,6 +57,19 @@
         y2={y}
         class={i % majorInterval === 0 ? 'major' : 'minor'}
       />
+    {/each}
+
+    <!-- Vertical lines -->
+    {#each verticalLines as x, i}
+      {#if i % majorInterval === 0}
+        <line
+          x1={x}
+          y1={startY}
+          x2={x}
+          y2={endY}
+          class={i % majorInterval === 0 ? 'major' : 'minor'}
+        />
+      {/if}
     {/each}
   </g>
   
