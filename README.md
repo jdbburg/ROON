@@ -3,6 +3,11 @@
 A node bsed editor for python using with a modern svelte frontend UI
 
 Use Meta+Shift+P to access command prompt
+
+## Commands
+- `:n`: all nodes that can be inserted into the graph have `:n` in the title for quick search. Nodes can be searched for by name or module
+- `Source2Nodes`: Convert the source in the editor window into a node and insert it into the graph - source must contain function definitions or no nodes will be generated
+
 # Development
 ## Svelte Application
 Uses rollup + svelte
