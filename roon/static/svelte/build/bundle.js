@@ -4217,7 +4217,7 @@ result = defs
         }
 
         console.log("Running Engine Complete");
-        console.log("Running generated graph script...");
+        console.log("Running generated graph script..., ", output["result"] );
         let script_output = await executor.execute( output["result"], {graphData: graphData}, {} );
         executor.stdoutHandler( script_output["stdout"] );
         executor.stderrHandler( script_output["stderr"] );
@@ -33013,7 +33013,7 @@ result = defs
     	return child_ctx;
     }
 
-    // (922:2) {#if config.grid.visible}
+    // (925:2) {#if config.grid.visible}
     function create_if_block_3(ctx) {
     	let grid;
     	let current;
@@ -33064,14 +33064,14 @@ result = defs
     		block,
     		id: create_if_block_3.name,
     		type: "if",
-    		source: "(922:2) {#if config.grid.visible}",
+    		source: "(925:2) {#if config.grid.visible}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (925:2) {#if highlightPointer}
+    // (928:2) {#if highlightPointer}
     function create_if_block_2(ctx) {
     	let circle;
 
@@ -33082,7 +33082,7 @@ result = defs
     			attr_dev(circle, "cy", /*mouseY*/ ctx[10]);
     			attr_dev(circle, "r", 5);
     			attr_dev(circle, "fill", "#F00");
-    			add_location(circle, file, 925, 3, 29735);
+    			add_location(circle, file, 928, 3, 29840);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, circle, anchor);
@@ -33105,14 +33105,14 @@ result = defs
     		block,
     		id: create_if_block_2.name,
     		type: "if",
-    		source: "(925:2) {#if highlightPointer}",
+    		source: "(928:2) {#if highlightPointer}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (934:3) {#each graphData.connections as conn}
+    // (937:3) {#each graphData.connections as conn}
     function create_each_block_1(ctx) {
     	let link;
     	let current;
@@ -33155,14 +33155,14 @@ result = defs
     		block,
     		id: create_each_block_1.name,
     		type: "each",
-    		source: "(934:3) {#each graphData.connections as conn}",
+    		source: "(937:3) {#each graphData.connections as conn}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (940:3) {#each graphData.nodes as node (node.id)}
+    // (943:3) {#each graphData.nodes as node (node.id)}
     function create_each_block(key_1, ctx) {
     	let first;
     	let node;
@@ -33228,14 +33228,14 @@ result = defs
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(940:3) {#each graphData.nodes as node (node.id)}",
+    		source: "(943:3) {#each graphData.nodes as node (node.id)}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (952:2) {#if activeConnection}
+    // (955:2) {#if activeConnection}
     function create_if_block_1(ctx) {
     	let path;
 
@@ -33246,7 +33246,7 @@ result = defs
     			attr_dev(path, "stroke", config$1.link.active.color);
     			attr_dev(path, "stroke-width", config$1.link.active.stroke_width);
     			attr_dev(path, "fill", "none");
-    			add_location(path, file, 952, 3, 30432);
+    			add_location(path, file, 955, 3, 30537);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, path, anchor);
@@ -33265,14 +33265,14 @@ result = defs
     		block,
     		id: create_if_block_1.name,
     		type: "if",
-    		source: "(952:2) {#if activeConnection}",
+    		source: "(955:2) {#if activeConnection}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (960:1) {#if showCommandPalette}
+    // (963:1) {#if showCommandPalette}
     function create_if_block(ctx) {
     	let div;
     	let commandpalette;
@@ -33290,7 +33290,7 @@ result = defs
     			div = element("div");
     			create_component(commandpalette.$$.fragment);
     			attr_dev(div, "class", "command-palette-overlay svelte-a2ukll");
-    			add_location(div, file, 960, 3, 30777);
+    			add_location(div, file, 963, 3, 30882);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -33317,7 +33317,7 @@ result = defs
     		block,
     		id: create_if_block.name,
     		type: "if",
-    		source: "(960:1) {#if showCommandPalette}",
+    		source: "(963:1) {#if showCommandPalette}",
     		ctx
     	});
 
@@ -33423,29 +33423,29 @@ result = defs
     			attr_dev(input0, "type", "file");
     			attr_dev(input0, "accept", "application/json");
     			set_style(input0, "display", "none");
-    			add_location(input0, file, 891, 1, 28982);
+    			add_location(input0, file, 894, 1, 29087);
     			attr_dev(input1, "type", "file");
     			attr_dev(input1, "accept", "application/json");
     			set_style(input1, "display", "none");
-    			add_location(input1, file, 900, 2, 29174);
+    			add_location(input1, file, 903, 2, 29279);
     			attr_dev(path, "d", /*ghostCutPath*/ ctx[16]);
     			attr_dev(path, "stroke", config$1.link.cut.color);
     			attr_dev(path, "stroke-width", config$1.link.cut.stroke_width);
     			attr_dev(path, "fill", "none");
-    			add_location(path, file, 956, 2, 30620);
+    			add_location(path, file, 959, 2, 30725);
     			attr_dev(svg, "id", "mySvg");
     			attr_dev(svg, "width", "100%");
     			attr_dev(svg, "height", "100%");
     			attr_dev(svg, "viewBox", /*viewBoxString*/ ctx[15]);
     			attr_dev(svg, "preserveAspectRatio", "none");
-    			add_location(svg, file, 912, 1, 29424);
+    			add_location(svg, file, 915, 1, 29529);
     			attr_dev(div0, "class", "canvas svelte-a2ukll");
-    			add_location(div0, file, 883, 0, 28794);
+    			add_location(div0, file, 886, 0, 28899);
     			attr_dev(div1, "id", "MPL-container");
     			set_style(div1, "position", "absolute");
     			set_style(div1, "top", "0");
-    			add_location(div1, file, 968, 1, 31066);
-    			add_location(div2, file, 967, 0, 31059);
+    			add_location(div1, file, 971, 1, 31171);
+    			add_location(div2, file, 970, 0, 31164);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -33931,7 +33931,7 @@ result = defs
     				// Convert that input’s graph coords -> screen coords
     				const cx = node.position.x;
 
-    				const cy = node.position.y + 30 + index * 25;
+    				const cy = node.position.y + config$1.node.header.height + index * config$1.node.socket.separation;
     				console.log("cx: ", cx, "cy: ", cy);
 
     				// Distance from mouse in pixel space
@@ -34097,6 +34097,8 @@ result = defs
     				// delete the def.id so that a new id is assigned when the node is added
     				delete def.id;
 
+    				def.module = "<source>";
+
     				commands.push({
     					name: "inline : " + name + "  (:n)",
     					callable: () => {
@@ -34105,6 +34107,7 @@ result = defs
     				});
 
     				executor.stdoutHandler(`Node Added: ${name}`);
+    				addNodeToGraph(def);
     			}
     		}
     	}

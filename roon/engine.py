@@ -3,6 +3,7 @@ from collections import defaultdict, deque
 
 def module_import_star(module_path):
     return f"import {module_path}"
+    
 
 def normalize_module_path(module_path):
     if module_path.endswith(".py"):
@@ -48,7 +49,7 @@ def generate_python_script(json_data):
     dependency_modules = set()
     function_defs = []
     for node in nodes:
-        if 'module' in node:
+        if 'module' in node and not node['module'] == "<source>":
             dependency_modules.add(normalize_module_path(node['module']))
             continue
         if 'source' not in node:
@@ -62,6 +63,8 @@ def generate_python_script(json_data):
         func_name = node['name']
         if 'module' in node:
             func_name = f"{normalize_module_path(node['module'])}.{func_name}"
+            if node['module'] == "<source>":
+                func_name = node['name']
 
         # Collect arguments
         args = []
@@ -95,6 +98,7 @@ def generate_python_script(json_data):
 
     # Assemble the script
     module_import_star_lines = [module_import_star(module) for module in dependency_modules]
+    # function_defs = []
     script = (
         "import sys\n\nsys.path.append('/Users/brandenburg.89/Development/rune/svelte/svelte-node-graph/nodes/')\n\n" +
         "\n\n".join(module_import_star_lines) + "\n\n" +
