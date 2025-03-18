@@ -12,13 +12,12 @@
 	import Grid from './Grid.svelte';
 
 	let pyodide; // Pyodide instance
-	let userCode = `print("Hello, ROON!")`;
-	$: pythonCode = userCode
+	let pythonCode = `print("Hello ROON")`;
 
 	// some debug stuff
 	let highlightPointer = false;
 	let highlightPosition = { x: 0, y: 0 };
-
+	let lastKey = null; // track last key for double escape
 
 	window.addEventListener('pywebviewready', function() {
 		console.log("pywebviewready");
@@ -310,9 +309,35 @@
 		// { name: 'setup fs', callable: mountDirectory },
 		{ name: 'Generate Python Script', callable: generateScriptAndSave},
 		{ name: 'Py2Nodes', callable: () => {  ["nodes.example_functions", "nodes.uproot_nodes"].map( loadNodesFromPythonSource ); } },
-		{ name: 'Show GeneratedScript', callable: () => { showGeneratedScript();  } }
+		{ name: 'Show GeneratedScript', callable: () => { showGeneratedScript();  } },
+		{ name: 'Toggle Fullscreen Editor', callable: () => { toggleFullscreenEditor();  } },
+		{ name: 'Source2Nodes', callable: sourceToNodes }
 	];
 
+	async function sourceToNodes(){
+		console.log("converting source to nodes");
+		console.log("Current code: ", pythonCode );
+
+		// let fileExtension = fileName.split('.').pop();, we could check for .py?
+		let response = await runPython2JSON( `${pythonCode}`, 'source' );
+		let node_defs = response["result"];
+		console.log( "NodeDefs: ", node_defs );
+
+		if (node_defs) {
+			for (const name in node_defs) {
+				let def = JSON.parse(node_defs[name]);
+				// delete the def.id so that a new id is assigned when the node is added
+				delete def.id;
+				commands.push( { name: "inline : " + name + "  (:n)" , callable: () => { addNodeToGraph(def); } } );
+				executor.stdoutHandler( `Node Added: ${name}` );
+			}
+		}
+	}
+	function toggleFullscreenEditor(){
+		let el = document.getElementById('code-editor'); 
+		// add fullscreen class to element
+		el.classList.toggle("fullscreen");
+	}
 	async function showGeneratedScript() {
 		let generated_script = await runEngine( graphData, false );
 		if ( !generated_script ) {
@@ -323,7 +348,7 @@
 		userCode = generated_script["result"];
 		console.log( "Generated Script: ", generated_script );
 	}
-	async function loadNodesFromPythonSource( known_path = null ) {
+	async function loadNodesFromPythonSource( known_path = null, type ) {
 		console.log("LoadNodesFromPythonSource: ", known_path);
 		let path = known_path;
 
@@ -686,15 +711,27 @@
 	function handleKeyDown(e) {
 		if ( e.key === 'Escape' ) {
 			selectedNodeId = null;
+
+			//get currently focussed element
+			let focussed = document.activeElement;
+
 			// remove focus from inputs
 			document.activeElement.blur();
+
+			// determine if element 'code-editor' has `fullscreen` class
+			let isFullscreen = document.getElementById('code-editor').classList.contains("fullscreen");
+			// this basically requires a double escape to minimize
+			if (isFullscreen && !focussed.classList.contains("cm-content")){
+				toggleFullscreenEditor();
+			}
 
 			let mpl = document.getElementById('MPL-container');
 			// hide the mpl container
 			mpl.style.display = "none";
 
-
+			lastKey = e.key;
 		}
+		
 		if (e.target.tagName === 'INPUT') return;
 		if (e.target.tagName !== 'BODY') return;
 		
@@ -927,7 +964,7 @@
 	{/if}
 	<!-- <PyodideTerm /> -->
 </div>
-<PythonRepl {pyodide} on:pyodideLoaded={onPyodideReady} {pythonCode}/>
+<PythonRepl {pyodide} on:pyodideLoaded={onPyodideReady} {pythonCode} on:update={(e)=>{pythonCode = e.detail}}/>
 <div>
 	<div id="MPL-container" style="position:absolute; top:0;"></div>
 </div>

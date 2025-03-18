@@ -17,25 +17,24 @@ result = engine.generate_python_script(graphData)
 result
 `;
 
-export async function runPython2JSON( module_path ) {
+export async function runPython2JSON( module_path, type = "module" ) {
     console.log("Running Python2JSON...");
+
+    let fun_call = "builtin2json.analyze_installed_module_functions"
+    if (type === "source"){
+        fun_call = "source2json.analyze_source_code_functions"
+    }
+
     const pythonCode = `
 import json
-import importlib.resources as resources
-with resources.path("roon", "static") as static_path:
-    sys.path.append(str(static_path))
 import sys
 sys.path.append('/user-data/')
 sys.path.append('./nodes/')
-import roon.allpy2json
+import roon.allpy2json as allpy2json
 import roon.builtin2json as builtin2json
+import roon.source2json as source2json
 
-script_source = "Running allpy2json..."
-#print("Running allpy2json...")
-# Evaluate using your DAG logic in engine.py
-#script_source = allpy2json.analyze_module_functions( "${module_path}", None, "" )
-defs = builtin2json.analyze_installed_module_functions( "${module_path}", None )
-#print(script_source)
+defs = ${fun_call}( """${module_path}""", None )
 result = defs
 `;
 
@@ -43,6 +42,7 @@ result = defs
     
     try {
         // output = generic_python_runner( pythonCode );
+        console.log("Running Python2JSON: ", pythonCode );
         output = await executor.execute( pythonCode, {}, {} );
         console.log("JSON Output:", output);
         // if (output !== undefined) {

@@ -6,12 +6,13 @@
     const dispatch = createEventDispatcher();
 
     export let pyodide; // the Pyodide instance passed from the parent
-    export let pythonCode = `print("Hello, Pyodide!")`;
+    export let pythonCode;
     let executionCount = 0;
 
 
     function handleCodeChange(newCode) {
-        // code = newCode;
+        pythonCode = newCode;
+        dispatch('update', pythonCode);  // Notify parent of the change
     }
 
     // State for the REPL
@@ -95,6 +96,16 @@
       padding-bottom: 5px;
       /* background: #333; */
     }
+
+    .fullscreen {
+      position: fixed;
+      top: 0;
+      left: 5%;
+      width: 90%;
+      height: 100%;
+      overflow-y: auto;
+      z-index: 9999;
+    }
   
     /* input {
       width: 100%;
@@ -117,7 +128,8 @@
     </div>
     
     <!-- Input for Python commands, uses codemirror -->
-    <div class="input-area">
+    <div id="code-editor" class="input-area">
       <CodeEditor value={pythonCode} onChange={handleCodeChange} onShiftEnter={handleEnter} immediateMode={true}/>
-    </div>
+    </div>  
+    <div class="fullscreen" style="display:none;"></div>
   </div>
