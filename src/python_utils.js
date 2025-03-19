@@ -75,7 +75,7 @@ export async function runEngine( graphData, execute = true ) {
     }
 
     console.log("Running Engine Complete");
-    console.log("Running generated graph script...");
+    console.log("Running generated graph script..., ", output["result"] );
     let script_output = await executor.execute( output["result"], {graphData: graphData}, {} );
     executor.stdoutHandler( script_output["stdout"] );
     executor.stderrHandler( script_output["stderr"] );

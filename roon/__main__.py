@@ -33,11 +33,15 @@ def start_server():
     #     print("Using local build dir")
     # else:
     # Running from installed package
-    with resources.path("roon.static", "svelte") as svelte_path:
-        svelte_build_dir = str(svelte_path)
+    try:
+        with resources.path("roon.static", "svelte") as svelte_path:
+            svelte_build_dir = str(svelte_path)
 
-    if not os.path.exists(svelte_build_dir):
-        raise FileNotFoundError(f"Svelte build directory not found: {svelte_build_dir}")
+        if not os.path.exists(svelte_build_dir):
+            raise FileNotFoundError(f"Svelte build directory not found: {svelte_build_dir}")
+    except Exception as e:
+        print(f"Error finding Svelte build directory: {e}")
+        svelte_build_dir = os.path.abspath("./roon/static/svelte")  # Adjust path as needed
 
     os.chdir(svelte_build_dir)
     PORT = 8000
@@ -111,9 +115,9 @@ def full_setup():
         width=800,
         height=600,
         # frameless=True,
-        transparent=True,
+        # transparent=True,
         # background_color='#00000000'
-        vibrancy=True
+        # vibrancy=True
     )
 
       # Inject JS to set a custom flag when the page loads

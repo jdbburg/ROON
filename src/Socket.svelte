@@ -64,7 +64,7 @@
     {#if (socketFlow == "input" && showWidgets && socket.default !== undefined)}
     <foreignObject
         x="17"
-        y={config.node.header.height + index * config.node.socket.separation}
+        y={config.node.header.height + index * config.node.socket.separation + 5}
         width="130"
         height="24"
         style="overflow: visible; pointer-events: none;"

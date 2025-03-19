@@ -61,7 +61,7 @@
   function calcNodeHeight() {
     const baseHeight = config.node.header.height; // space for title
     const maxIO = Math.max(node.inputs.length, node.outputs.length);
-    return baseHeight + maxIO * config.node.socket.separation;
+    return baseHeight + maxIO * config.node.socket.separation + config.node.footer.height;
   }
 
   function calcNodeWidth() {

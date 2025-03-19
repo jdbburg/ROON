@@ -20,10 +20,7 @@
 	let lastKey = null; // track last key for double escape
 
 	window.addEventListener('pywebviewready', function() {
-		console.log("pywebviewready");
-		loadNodesFromPythonSource( "nodes.example_functions" );
-		loadNodesFromPythonSource( "nodes.uproot_nodes" );
-		loadNodesFromPythonSource( "nodes.matplotlib_nodes" );
+		onPythonExecutorReady();
 	});
 
 /* ---------------------------------------------------------------------------
@@ -221,7 +218,7 @@
 			for (const input of node.inputs) {
 				// Convert that input’s graph coords -> screen coords
 				const cx = node.position.x;
-				const cy = node.position.y + 30 + index * 25;
+				const cy = node.position.y + config.node.header.height + index * config.node.socket.separation;
 				console.log( "cx: ", cx, "cy: ", cy );
 
 				// Distance from mouse in pixel space
@@ -328,8 +325,11 @@
 				let def = JSON.parse(node_defs[name]);
 				// delete the def.id so that a new id is assigned when the node is added
 				delete def.id;
+				def.module = "<source>";
 				commands.push( { name: "inline : " + name + "  (:n)" , callable: () => { addNodeToGraph(def); } } );
 				executor.stdoutHandler( `Node Added: ${name}` );
+
+				addNodeToGraph(def);
 			}
 		}
 	}
@@ -375,7 +375,7 @@
 				let def = JSON.parse(node_defs[name]);
 				// delete the def.id so that a new id is assigned when the node is added
 				delete def.id;
-				commands.push( { name: path + ": " + name + "  (n)" , callable: () => { addNodeToGraph(def); } } );
+				commands.push( { name: path + ": " + name + "  (:n)" , callable: () => { addNodeToGraph(def); } } );
 				executor.stdoutHandler( `Node Added: ${name}` );
 			}
 		}
@@ -709,11 +709,11 @@
   
 	// WASD panning + +/- zoom
 	function handleKeyDown(e) {
+
+		//get currently focussed element
+		let focussed = document.activeElement;
 		if ( e.key === 'Escape' ) {
 			selectedNodeId = null;
-
-			//get currently focussed element
-			let focussed = document.activeElement;
 
 			// remove focus from inputs
 			document.activeElement.blur();
@@ -730,10 +730,15 @@
 			mpl.style.display = "none";
 
 			lastKey = e.key;
+			e.preventDefault();
 		}
-		
+
 		if (e.target.tagName === 'INPUT') return;
-		if (e.target.tagName !== 'BODY') return;
+		if (focussed.classList.contains("cm-content")) return;
+		if (e.target.tagName !== 'BODY') {
+			e.preventDefault();
+			return;
+		}
 		
 	  // For panning, we move camera in graph coords
 	  // e.g. pressing W => cameraY -= some offset
@@ -752,9 +757,7 @@
 				handleCameraZoom(-1);
 			} else if (e.key === 'h' || e.key === 'H') {
 				// highlightPointer = !highlightPointer;
-				cameraX = 0;
-				cameraY = 0;
-				scale = 0.5;
+				setHomeView();
 			} else if (e.key === 'Delete' || e.key === 'Backspace') {
 				console.log("Delete key pressed");
 				deleteSelectedNode();
@@ -780,10 +783,35 @@
 	  if (e.key === 'Escape' && showCommandPalette) {
 		showCommandPalette = false;
 	  } 
+	  e.preventDefault();
+	  e.stopPropagation();
 	}
   
 	// The final derived viewBox, updated whenever cameraX, cameraY, or scale changes
 	$: viewBoxString = `${cameraX} ${cameraY} ${baseWidth / scale} ${baseHeight / scale}`;
+
+	function setHomeView() {
+		// loop over nodes and get the min/max x/y
+		let minX = Infinity;
+		let minY = Infinity;
+		let maxX = -Infinity;
+		let maxY = -Infinity;
+		for (const node of graphData.nodes) {
+			if (node.position.x < minX) minX = node.position.x;
+			if (node.position.y < minY) minY = node.position.y;
+			if (node.position.x > maxX) maxX = node.position.x;
+			if (node.position.y > maxY) maxY = node.position.y;
+		}
+
+	  cameraX = minX - 75;
+	  cameraY = minY - 75;
+	  maxY += 250; // due to console
+	  // set scale to min of scale computed from x/y
+	  // this is a bit of a hack, but it works
+	  scale =  Math.min( (baseWidth * 0.8) / (maxX + config.node.width - minX), (baseHeight * 0.9) / (maxY - minY) );
+	  if (scale < 0.1) scale = 0.1;
+	  if (scale > 10) scale = 10;
+	}
   
 	/* ---------------------------------------------------------------------------
 	 * CONNECTIONS
@@ -845,11 +873,10 @@
 	  );
 	}
 
-	function onPyodideReady() {
+	function onPythonExecutorReady() {
 		// load our default nodes
-		loadNodesFromPythonSource( "example_functions.py" );
-		loadNodesFromPythonSource( "uproot_nodes.py" );
-		loadNodesFromPythonSource( "basic.py" );
+		loadNodesFromPythonSource( "roon.builtin_uproot" );
+		loadNodesFromPythonSource( "roon.builtin_basic" );
 	}
 </script>
   
@@ -964,7 +991,7 @@
 	{/if}
 	<!-- <PyodideTerm /> -->
 </div>
-<PythonRepl {pyodide} on:pyodideLoaded={onPyodideReady} {pythonCode} on:update={(e)=>{pythonCode = e.detail}}/>
+<PythonRepl {pyodide} on:pyodideLoaded={onPythonExecutorReady} {pythonCode} on:update={(e)=>{pythonCode = e.detail}}/>
 <div>
 	<div id="MPL-container" style="position:absolute; top:0;"></div>
 </div>

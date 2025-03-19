@@ -663,11 +663,14 @@ var app = (function () {
             width: 200,
             height: 100,
             socket: {
-                separation: 25,
+                separation: 32,
                 radius: 5
             },
             header: {
                 height: 40
+            },
+            footer: {
+                height: 10
             }
         },
         link:{
@@ -736,9 +739,9 @@ var app = (function () {
     			if_block.c();
     			t = space$1();
     			set_style(div, "pointer-events", "auto");
-    			add_location(div, file$7, 71, 6, 2133);
+    			add_location(div, file$7, 71, 6, 2137);
     			attr_dev(foreignObject, "x", "17");
-    			attr_dev(foreignObject, "y", foreignObject_y_value = config$1.node.header.height + /*index*/ ctx[1] * config$1.node.socket.separation);
+    			attr_dev(foreignObject, "y", foreignObject_y_value = config$1.node.header.height + /*index*/ ctx[1] * config$1.node.socket.separation + 5);
     			attr_dev(foreignObject, "width", "130");
     			attr_dev(foreignObject, "height", "24");
     			set_style(foreignObject, "overflow", "visible");
@@ -764,7 +767,7 @@ var app = (function () {
     				}
     			}
 
-    			if (dirty & /*index*/ 2 && foreignObject_y_value !== (foreignObject_y_value = config$1.node.header.height + /*index*/ ctx[1] * config$1.node.socket.separation)) {
+    			if (dirty & /*index*/ 2 && foreignObject_y_value !== (foreignObject_y_value = config$1.node.header.height + /*index*/ ctx[1] * config$1.node.socket.separation + 5)) {
     				attr_dev(foreignObject, "y", foreignObject_y_value);
     			}
     		},
@@ -801,7 +804,7 @@ var app = (function () {
     			set_style(input, "height", "20px");
     			set_style(input, "font-size", "12px");
     			set_style(input, "box-sizing", "border-box");
-    			add_location(input, file$7, 93, 10, 3055);
+    			add_location(input, file$7, 93, 10, 3059);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, input, anchor);
@@ -857,7 +860,7 @@ var app = (function () {
     			set_style(input, "font-size", "12px");
     			set_style(input, "box-sizing", "border-box");
     			set_style(input, "pointer-events", "auto");
-    			add_location(input, file$7, 83, 10, 2645);
+    			add_location(input, file$7, 83, 10, 2649);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, input, anchor);
@@ -912,7 +915,7 @@ var app = (function () {
     			set_style(input, "height", "20px");
     			set_style(input, "font-size", "12px");
     			set_style(input, "box-sizing", "border-box");
-    			add_location(input, file$7, 73, 10, 2216);
+    			add_location(input, file$7, 73, 10, 2220);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, input, anchor);
@@ -997,15 +1000,15 @@ var app = (function () {
     			attr_dev(circle0, "cy", circle0_cy_value = socketPosition(/*socketFlow*/ ctx[2], /*index*/ ctx[1]).y);
     			attr_dev(circle0, "r", socketRadius + 2);
     			attr_dev(circle0, "fill", circle0_fill_value = socketColorForType(/*socket*/ ctx[0].type, 90, 20));
-    			add_location(circle0, file$7, 112, 8, 3648);
+    			add_location(circle0, file$7, 112, 8, 3652);
     			attr_dev(circle1, "class", "socket output-socket");
     			attr_dev(circle1, "cx", circle1_cx_value = socketPosition(/*socketFlow*/ ctx[2], /*index*/ ctx[1]).x);
     			attr_dev(circle1, "cy", circle1_cy_value = socketPosition(/*socketFlow*/ ctx[2], /*index*/ ctx[1]).y);
     			attr_dev(circle1, "r", socketRadius);
     			attr_dev(circle1, "fill", circle1_fill_value = socketColorForType(/*socket*/ ctx[0].type));
-    			add_location(circle1, file$7, 120, 8, 3946);
+    			add_location(circle1, file$7, 120, 8, 3950);
     			attr_dev(g0, "class", "socket-group svelte-7hhi7z");
-    			add_location(g0, file$7, 108, 4, 3481);
+    			add_location(g0, file$7, 108, 4, 3485);
     			add_location(g1, file$7, 50, 0, 1473);
     		},
     		l: function claim(nodes) {
@@ -1510,8 +1513,8 @@ var app = (function () {
     				each_blocks[i].c();
     			}
 
-    			add_location(select, file$6, 96, 6, 3067);
-    			add_location(foreignObject, file$6, 95, 4, 3045);
+    			add_location(select, file$6, 96, 6, 3095);
+    			add_location(foreignObject, file$6, 95, 4, 3073);
     			attr_dev(rect, "x", "0");
     			attr_dev(rect, "y", "0");
     			attr_dev(rect, "rx", "5");
@@ -1521,15 +1524,15 @@ var app = (function () {
     			attr_dev(rect, "fill", "#fff");
     			attr_dev(rect, "stroke", /*outline_color*/ ctx[2]);
     			attr_dev(rect, "stroke-width", /*outline_stroke_width*/ ctx[1]);
-    			add_location(rect, file$6, 100, 4, 3118);
+    			add_location(rect, file$6, 100, 4, 3146);
     			attr_dev(text_1, "x", "10");
     			attr_dev(text_1, "y", config$1.node.header.height / 3.0);
     			attr_dev(text_1, "font-size", "12");
     			attr_dev(text_1, "fill", "#333");
-    			add_location(text_1, file$6, 109, 4, 3328);
+    			add_location(text_1, file$6, 109, 4, 3356);
     			attr_dev(g, "transform", g_transform_value = "translate(" + /*node*/ ctx[0].position.x + ", " + /*node*/ ctx[0].position.y + ")");
     			set_style(g, "cursor", "move");
-    			add_location(g, file$6, 90, 2, 2905);
+    			add_location(g, file$6, 90, 2, 2933);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -1746,7 +1749,7 @@ var app = (function () {
     	function calcNodeHeight() {
     		const baseHeight = config$1.node.header.height; // space for title
     		const maxIO = Math.max(node.inputs.length, node.outputs.length);
-    		return baseHeight + maxIO * config$1.node.socket.separation;
+    		return baseHeight + maxIO * config$1.node.socket.separation + config$1.node.footer.height;
     	}
 
     	function calcNodeWidth() {
@@ -1930,7 +1933,7 @@ var app = (function () {
     	return child_ctx;
     }
 
-    // (55:6) {#each filteredCommands as cmd, i}
+    // (56:6) {#each filteredCommands as cmd, i}
     function create_each_block$3(ctx) {
     	let li;
     	let t0_value = /*cmd*/ ctx[10].name + "";
@@ -1950,7 +1953,7 @@ var app = (function () {
     			t1 = space$1();
     			attr_dev(li, "class", "svelte-1mxort7");
     			toggle_class(li, "selected", /*i*/ ctx[12] === /*selectedIndex*/ ctx[2]);
-    			add_location(li, file$5, 56, 8, 1848);
+    			add_location(li, file$5, 57, 8, 1876);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, li, anchor);
@@ -1981,7 +1984,7 @@ var app = (function () {
     		block,
     		id: create_each_block$3.name,
     		type: "each",
-    		source: "(55:6) {#each filteredCommands as cmd, i}",
+    		source: "(56:6) {#each filteredCommands as cmd, i}",
     		ctx
     	});
 
@@ -2018,11 +2021,11 @@ var app = (function () {
     			attr_dev(input, "placeholder", "Type a command...");
     			input.autofocus = true;
     			attr_dev(input, "class", "svelte-1mxort7");
-    			add_location(input, file$5, 46, 4, 1562);
+    			add_location(input, file$5, 47, 4, 1590);
     			attr_dev(ul, "class", "svelte-1mxort7");
-    			add_location(ul, file$5, 53, 4, 1715);
+    			add_location(ul, file$5, 54, 4, 1743);
     			attr_dev(div, "class", "palette svelte-1mxort7");
-    			add_location(div, file$5, 45, 2, 1536);
+    			add_location(div, file$5, 46, 2, 1564);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -2116,6 +2119,7 @@ var app = (function () {
     	function handleKeyDown(e) {
     		if (e.key === "Enter" && filteredCommands.length > 0) {
     			dispatch('selectCommand', filteredCommands[selectedIndex]);
+    			e.preventDefault();
     		} else // ARROW DOWN moves selection forward
     		if (e.key === 'ArrowDown') {
     			if (filteredCommands.length > 0) {
@@ -33003,17 +33007,17 @@ result = defs
 
     function get_each_context(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[78] = list[i];
+    	child_ctx[79] = list[i];
     	return child_ctx;
     }
 
     function get_each_context_1(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[81] = list[i];
+    	child_ctx[82] = list[i];
     	return child_ctx;
     }
 
-    // (925:2) {#if config.grid.visible}
+    // (959:2) {#if config.grid.visible}
     function create_if_block_3(ctx) {
     	let grid;
     	let current;
@@ -33064,14 +33068,14 @@ result = defs
     		block,
     		id: create_if_block_3.name,
     		type: "if",
-    		source: "(925:2) {#if config.grid.visible}",
+    		source: "(959:2) {#if config.grid.visible}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (928:2) {#if highlightPointer}
+    // (962:2) {#if highlightPointer}
     function create_if_block_2(ctx) {
     	let circle;
 
@@ -33082,7 +33086,7 @@ result = defs
     			attr_dev(circle, "cy", /*mouseY*/ ctx[10]);
     			attr_dev(circle, "r", 5);
     			attr_dev(circle, "fill", "#F00");
-    			add_location(circle, file, 928, 3, 29840);
+    			add_location(circle, file, 962, 3, 30910);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, circle, anchor);
@@ -33105,21 +33109,21 @@ result = defs
     		block,
     		id: create_if_block_2.name,
     		type: "if",
-    		source: "(928:2) {#if highlightPointer}",
+    		source: "(962:2) {#if highlightPointer}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (937:3) {#each graphData.connections as conn}
+    // (971:3) {#each graphData.connections as conn}
     function create_each_block_1(ctx) {
     	let link;
     	let current;
 
     	link = new Link({
     			props: {
-    				path: /*computePathData*/ ctx[32](/*conn*/ ctx[81])
+    				path: /*computePathData*/ ctx[32](/*conn*/ ctx[82])
     			},
     			$$inline: true
     		});
@@ -33134,7 +33138,7 @@ result = defs
     		},
     		p: function update(ctx, dirty) {
     			const link_changes = {};
-    			if (dirty[0] & /*graphData*/ 2) link_changes.path = /*computePathData*/ ctx[32](/*conn*/ ctx[81]);
+    			if (dirty[0] & /*graphData*/ 2) link_changes.path = /*computePathData*/ ctx[32](/*conn*/ ctx[82]);
     			link.$set(link_changes);
     		},
     		i: function intro(local) {
@@ -33155,30 +33159,30 @@ result = defs
     		block,
     		id: create_each_block_1.name,
     		type: "each",
-    		source: "(937:3) {#each graphData.connections as conn}",
+    		source: "(971:3) {#each graphData.connections as conn}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (943:3) {#each graphData.nodes as node (node.id)}
+    // (977:3) {#each graphData.nodes as node (node.id)}
     function create_each_block(key_1, ctx) {
     	let first;
     	let node;
     	let current;
 
     	function drag_handler(...args) {
-    		return /*drag_handler*/ ctx[42](/*node*/ ctx[78], ...args);
+    		return /*drag_handler*/ ctx[42](/*node*/ ctx[79], ...args);
     	}
 
     	function select_handler() {
-    		return /*select_handler*/ ctx[43](/*node*/ ctx[78]);
+    		return /*select_handler*/ ctx[43](/*node*/ ctx[79]);
     	}
 
     	node = new Node({
     			props: {
-    				node: /*node*/ ctx[78],
+    				node: /*node*/ ctx[79],
     				selectedNodeId: /*selectedNodeId*/ ctx[11],
     				screenToGraphCoords: /*screenToGraphCoords*/ ctx[27]
     			},
@@ -33205,7 +33209,7 @@ result = defs
     		p: function update(new_ctx, dirty) {
     			ctx = new_ctx;
     			const node_changes = {};
-    			if (dirty[0] & /*graphData*/ 2) node_changes.node = /*node*/ ctx[78];
+    			if (dirty[0] & /*graphData*/ 2) node_changes.node = /*node*/ ctx[79];
     			if (dirty[0] & /*selectedNodeId*/ 2048) node_changes.selectedNodeId = /*selectedNodeId*/ ctx[11];
     			node.$set(node_changes);
     		},
@@ -33228,14 +33232,14 @@ result = defs
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(943:3) {#each graphData.nodes as node (node.id)}",
+    		source: "(977:3) {#each graphData.nodes as node (node.id)}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (955:2) {#if activeConnection}
+    // (989:2) {#if activeConnection}
     function create_if_block_1(ctx) {
     	let path;
 
@@ -33246,7 +33250,7 @@ result = defs
     			attr_dev(path, "stroke", config$1.link.active.color);
     			attr_dev(path, "stroke-width", config$1.link.active.stroke_width);
     			attr_dev(path, "fill", "none");
-    			add_location(path, file, 955, 3, 30537);
+    			add_location(path, file, 989, 3, 31607);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, path, anchor);
@@ -33265,14 +33269,14 @@ result = defs
     		block,
     		id: create_if_block_1.name,
     		type: "if",
-    		source: "(955:2) {#if activeConnection}",
+    		source: "(989:2) {#if activeConnection}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (963:1) {#if showCommandPalette}
+    // (997:1) {#if showCommandPalette}
     function create_if_block(ctx) {
     	let div;
     	let commandpalette;
@@ -33290,7 +33294,7 @@ result = defs
     			div = element("div");
     			create_component(commandpalette.$$.fragment);
     			attr_dev(div, "class", "command-palette-overlay svelte-a2ukll");
-    			add_location(div, file, 963, 3, 30882);
+    			add_location(div, file, 997, 3, 31952);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -33317,7 +33321,7 @@ result = defs
     		block,
     		id: create_if_block.name,
     		type: "if",
-    		source: "(963:1) {#if showCommandPalette}",
+    		source: "(997:1) {#if showCommandPalette}",
     		ctx
     	});
 
@@ -33364,7 +33368,7 @@ result = defs
 
     	let each_value = /*graphData*/ ctx[1].nodes;
     	validate_each_argument(each_value);
-    	const get_key = ctx => /*node*/ ctx[78].id;
+    	const get_key = ctx => /*node*/ ctx[79].id;
     	validate_each_keys(ctx, each_value, get_each_context, get_key);
 
     	for (let i = 0; i < each_value.length; i += 1) {
@@ -33384,7 +33388,7 @@ result = defs
     			$$inline: true
     		});
 
-    	pythonrepl.$on("pyodideLoaded", /*onPyodideReady*/ ctx[35]);
+    	pythonrepl.$on("pyodideLoaded", /*onPythonExecutorReady*/ ctx[35]);
     	pythonrepl.$on("update", /*update_handler*/ ctx[46]);
 
     	const block = {
@@ -33423,29 +33427,29 @@ result = defs
     			attr_dev(input0, "type", "file");
     			attr_dev(input0, "accept", "application/json");
     			set_style(input0, "display", "none");
-    			add_location(input0, file, 894, 1, 29087);
+    			add_location(input0, file, 928, 1, 30157);
     			attr_dev(input1, "type", "file");
     			attr_dev(input1, "accept", "application/json");
     			set_style(input1, "display", "none");
-    			add_location(input1, file, 903, 2, 29279);
+    			add_location(input1, file, 937, 2, 30349);
     			attr_dev(path, "d", /*ghostCutPath*/ ctx[16]);
     			attr_dev(path, "stroke", config$1.link.cut.color);
     			attr_dev(path, "stroke-width", config$1.link.cut.stroke_width);
     			attr_dev(path, "fill", "none");
-    			add_location(path, file, 959, 2, 30725);
+    			add_location(path, file, 993, 2, 31795);
     			attr_dev(svg, "id", "mySvg");
     			attr_dev(svg, "width", "100%");
     			attr_dev(svg, "height", "100%");
     			attr_dev(svg, "viewBox", /*viewBoxString*/ ctx[15]);
     			attr_dev(svg, "preserveAspectRatio", "none");
-    			add_location(svg, file, 915, 1, 29529);
+    			add_location(svg, file, 949, 1, 30599);
     			attr_dev(div0, "class", "canvas svelte-a2ukll");
-    			add_location(div0, file, 886, 0, 28899);
+    			add_location(div0, file, 920, 0, 29969);
     			attr_dev(div1, "id", "MPL-container");
     			set_style(div1, "position", "absolute");
     			set_style(div1, "top", "0");
-    			add_location(div1, file, 971, 1, 31171);
-    			add_location(div2, file, 970, 0, 31164);
+    			add_location(div1, file, 1005, 1, 32248);
+    			add_location(div2, file, 1004, 0, 32241);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -33728,10 +33732,11 @@ result = defs
     	let lastKey = null; // track last key for double escape
 
     	window.addEventListener('pywebviewready', function () {
-    		console.log("pywebviewready");
-    		loadNodesFromPythonSource("nodes.example_functions");
-    		loadNodesFromPythonSource("nodes.uproot_nodes");
-    		loadNodesFromPythonSource("nodes.matplotlib_nodes");
+    		// console.log("pywebviewready");
+    		// loadNodesFromPythonSource( "nodes.example_functions" );
+    		// loadNodesFromPythonSource( "nodes.uproot_nodes" );
+    		// loadNodesFromPythonSource( "nodes.matplotlib_nodes" );
+    		onPythonExecutorReady();
     	});
 
     	/* ---------------------------------------------------------------------------
@@ -34160,7 +34165,7 @@ result = defs
     				delete def.id;
 
     				commands.push({
-    					name: path + ": " + name + "  (n)",
+    					name: path + ": " + name + "  (:n)",
     					callable: () => {
     						addNodeToGraph(def);
     					}
@@ -34494,11 +34499,11 @@ result = defs
 
     	// WASD panning + +/- zoom
     	function handleKeyDown(e) {
+    		//get currently focussed element
+    		let focussed = document.activeElement;
+
     		if (e.key === 'Escape') {
     			$$invalidate(11, selectedNodeId = null);
-
-    			//get currently focussed element
-    			let focussed = document.activeElement;
 
     			// remove focus from inputs
     			document.activeElement.blur();
@@ -34517,10 +34522,18 @@ result = defs
     			mpl.style.display = "none";
 
     			lastKey = e.key;
+    			e.preventDefault();
     		}
 
+    		console.log("KeyDown: ", e.key);
+    		console.log("on tagname: ", e.target.tagName);
     		if (e.target.tagName === 'INPUT') return;
-    		if (e.target.tagName !== 'BODY') return;
+    		if (focussed.classList.contains("cm-content")) return;
+
+    		if (e.target.tagName !== 'BODY') {
+    			e.preventDefault();
+    			return;
+    		}
 
     		// For panning, we move camera in graph coords
     		// e.g. pressing W => cameraY -= some offset
@@ -34539,10 +34552,7 @@ result = defs
     				handleCameraZoom(-1);
     			} else if (e.key === 'h' || e.key === 'H') {
     				// highlightPointer = !highlightPointer;
-    				$$invalidate(4, cameraX = 0);
-
-    				$$invalidate(5, cameraY = 0);
-    				$$invalidate(6, scale = 0.5);
+    				setHomeView();
     			} else if (e.key === 'Delete' || e.key === 'Backspace') {
     				console.log("Delete key pressed");
     				deleteSelectedNode();
@@ -34569,6 +34579,36 @@ result = defs
     		if (e.key === 'Escape' && showCommandPalette) {
     			$$invalidate(12, showCommandPalette = false);
     		}
+
+    		e.preventDefault();
+    		e.stopPropagation();
+    	}
+
+    	function setHomeView() {
+    		// loop over nodes and get the min/max x/y
+    		let minX = Infinity;
+
+    		let minY = Infinity;
+    		let maxX = -Infinity;
+    		let maxY = -Infinity;
+
+    		for (const node of graphData.nodes) {
+    			if (node.position.x < minX) minX = node.position.x;
+    			if (node.position.y < minY) minY = node.position.y;
+    			if (node.position.x > maxX) maxX = node.position.x;
+    			if (node.position.y > maxY) maxY = node.position.y;
+    		}
+
+    		$$invalidate(4, cameraX = minX - 75);
+    		$$invalidate(5, cameraY = minY - 75);
+    		maxY += 250; // due to console
+
+    		// set scale to min of scale computed from x/y
+    		// this is a bit of a hack, but it works
+    		$$invalidate(6, scale = Math.min(baseWidth * 0.8 / (maxX + config$1.node.width - minX), baseHeight * 0.9 / (maxY - minY)));
+
+    		if (scale < 0.1) $$invalidate(6, scale = 0.1);
+    		if (scale > 10) $$invalidate(6, scale = 10);
     	}
 
     	/* ---------------------------------------------------------------------------
@@ -34629,12 +34669,12 @@ result = defs
     		);
     	}
 
-    	function onPyodideReady() {
+    	function onPythonExecutorReady() {
     		// load our default nodes
-    		loadNodesFromPythonSource("example_functions.py");
+    		// loadNodesFromPythonSource( "example_functions.py" );
+    		loadNodesFromPythonSource("roon.builtin_uproot");
 
-    		loadNodesFromPythonSource("uproot_nodes.py");
-    		loadNodesFromPythonSource("basic.py");
+    		loadNodesFromPythonSource("roon.builtin_basic");
     	}
 
     	const writable_props = [];
@@ -34753,13 +34793,14 @@ result = defs
     		handleCameraPan,
     		handleWheel,
     		handleKeyDown,
+    		setHomeView,
     		getNodeById,
     		computePathData,
     		getSocketPosition,
     		selectNode,
     		snapNodeToGrid,
     		updateNodePosition,
-    		onPyodideReady,
+    		onPythonExecutorReady,
     		viewBoxString,
     		ghostCutPath,
     		ghostPath,
@@ -34882,7 +34923,7 @@ result = defs
     		computePathData,
     		selectNode,
     		updateNodePosition,
-    		onPyodideReady,
+    		onPythonExecutorReady,
     		startGraphCoords,
     		mouseGraphCoords,
     		activeCutConnection,

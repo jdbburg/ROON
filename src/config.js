@@ -19,11 +19,14 @@ export let config = {
         width: 200,
         height: 100,
         socket: {
-            separation: 25,
+            separation: 32,
             radius: 5
         },
         header: {
             height: 40
+        },
+        footer: {
+            height: 10
         }
     },
     link:{

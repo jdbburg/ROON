@@ -25,6 +25,7 @@
     function handleKeyDown(e) {
       if (e.key === "Enter" && filteredCommands.length > 0) {
         dispatch('selectCommand', filteredCommands[selectedIndex]);
+        e.preventDefault();
       }
       // ARROW DOWN moves selection forward
       else if (e.key === 'ArrowDown') {
