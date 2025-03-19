@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "roon"
-version = "0.4.6"
+version = "0.4.8"
 description = "A modern node based python editor and REPL for physics, education, and data analysis"
 readme = "README.md" 
 dependencies = ["pywebview"]

@@ -1,6 +1,7 @@
 
 
 export let config = {
+    filename: "roon.py",
     grid: {
         visible: true,
         snapping: true, 

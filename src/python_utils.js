@@ -1,5 +1,6 @@
 
 import PythonExecutor from './PythonExecutor';
+import {config} from './config.js';
 
 const PYTHON_BACKEND = process.env.PYTHON_BACKEND || 'auto';
 
@@ -14,6 +15,12 @@ sys.path.append('./roon/')
 
 # Evaluate using your DAG logic in engine.py
 result = engine.generate_python_script(graphData)
+if filename:
+    with open(filename, "w") as f:
+        f.write(result)
+    print( "FILE SAVED: ", filename )
+else:
+    print( "Cannot save file without filename" )
 result
 `;
 
@@ -62,7 +69,7 @@ export async function runEngine( graphData, execute = true ) {
     console.log("Running Engine...");
     let output = null;
     try{
-        output = await executor.execute( pythonEngineCode, {graphData: graphData}, {} );
+        output = await executor.execute( pythonEngineCode, {graphData: graphData, filename: config.filename}, {} );
     } catch (err) {
         console.error("Error running engine:", String(err) );
         stdout( String(err) );
