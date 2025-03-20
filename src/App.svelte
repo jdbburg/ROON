@@ -18,6 +18,8 @@
 	let highlightPointer = false;
 	let highlightPosition = { x: 0, y: 0 };
 	let lastKey = null; // track last key for double escape
+	let previousConsoleLayout = 'repl'; // track previous console layout, so that escape on fullscreen brings you back
+	let doublePreviousConsoleLayout = 'repl'; // track previous console layout, so that escape on fullscreen brings you back
 
 	window.addEventListener('pywebviewready', function() {
 		onPythonExecutorReady();
@@ -307,10 +309,84 @@
 		{ name: 'Generate Python Script', callable: generateScriptAndSave},
 		{ name: 'Py2Nodes', callable: () => {  ["nodes.example_functions", "nodes.uproot_nodes"].map( loadNodesFromPythonSource ); } },
 		{ name: 'Show GeneratedScript', callable: () => { showGeneratedScript();  } },
-		{ name: 'Toggle Fullscreen Editor', callable: () => { toggleFullscreenEditor();  } },
-		{ name: 'Source2Nodes', callable: sourceToNodes }
+		// { name: 'Toggle Fullscreen Editor', callable: () => { toggleFullscreenEditor();  } },
+		{ name: 'Source2Nodes', callable: sourceToNodes },
+		{ name: "Console Layout SideBySide", callable: () => {consoleLayout( 'side-by-side' );} },
+		{ name: "Console Layout TopBottom", callable: () => {consoleLayout( 'repl' );} },
+		{ name: "Console Layout Hide Output", callable: () => {consoleLayout( 'editor-full' );} },
+		{ name: "Console Layout Hide Editor", callable: () => {consoleLayout( 'output-full' );} },
+		{ name: "Fullscreen Editor", callable: () => {consoleLayout( 'editor-fullscreen' );} },
+		{ name: "Fullscreen Output", callable: () => {consoleLayout( 'output-fullscreen' );} },
 	];
 
+
+	function consoleLayout( layout ){
+		let code_editor = document.getElementById('code-editor');
+		let console_output = document.getElementById('console-output');
+		let repl = document.getElementById('repl');
+
+		// reset to default
+		repl.classList.remove("side-by-side");
+		repl.classList.remove("top-bottom");
+		repl.classList.remove("fullscreen");
+		code_editor.classList.remove("right");
+		code_editor.classList.remove("bottom");
+		code_editor.classList.remove("fullscreen");
+		console_output.classList.remove("left");
+		console_output.classList.remove("top");
+		console_output.classList.remove("fullscreen");
+
+
+		console_output.classList.remove("hidden");
+		if ( layout === 'side-by-side' || layout === 'editor-full' || layout === 'output-full' ) {
+			repl.classList.remove("top-bottom");
+			repl.classList.add("side-by-side");
+			
+			code_editor.classList.remove("bottom");
+			code_editor.classList.add("right");
+			
+			console_output.classList.remove("top");
+			console_output.classList.add("left");
+
+			if ( layout === 'editor-full' ) {
+				console_output.classList.add("hidden");
+			} else {
+				console_output.classList.remove("hidden");
+			}
+
+			if ( layout === 'output-full' ) {
+				code_editor.classList.add("hidden");
+			} else {
+				code_editor.classList.remove("hidden");
+			}
+
+		} else if ( layout === 'repl' ) {
+			repl.classList.remove("side-by-side");
+			repl.classList.add("top-bottom");
+
+			code_editor.classList.remove("right");
+			code_editor.classList.add("bottom");
+
+			console_output.classList.remove("left");
+			console_output.classList.add("top");
+		} else if ( layout === 'editor-fullscreen' ) {
+			code_editor.classList.add("fullscreen");
+			code_editor.classList.remove("bottom");
+			code_editor.classList.remove("right");
+			code_editor.classList.remove("hidden");
+			console_output.classList.add("hidden");
+		} else if ( layout === 'output-fullscreen' ) {
+			repl.classList.add("fullscreen");
+			console_output.classList.remove("top");
+			console_output.classList.remove("left");
+			code_editor.classList.add("hidden");
+		// else {
+		// 	code_editor.classList.remove("fullscreen");
+		// 	code_editor.classList.remove("hidden");
+		}
+		doublePreviousConsoleLayout = previousConsoleLayout;
+		previousConsoleLayout = layout;
+	}
 	async function sourceToNodes(){
 		console.log("converting source to nodes");
 		console.log("Current code: ", pythonCode );
@@ -333,11 +409,7 @@
 			}
 		}
 	}
-	function toggleFullscreenEditor(){
-		let el = document.getElementById('code-editor'); 
-		// add fullscreen class to element
-		el.classList.toggle("fullscreen");
-	}
+
 	async function showGeneratedScript() {
 		let generated_script = await runEngine( graphData, false );
 		if ( !generated_script ) {
@@ -715,14 +787,22 @@
 		if ( e.key === 'Escape' ) {
 			selectedNodeId = null;
 
-			// remove focus from inputs
-			document.activeElement.blur();
+			let isActive = false;
+			// let isActive = completionStatus(state) === "active";
+			if (!isActive){
+				// remove focus from inputs
+				document.activeElement.blur();
+			}
 
 			// determine if element 'code-editor' has `fullscreen` class
 			let isFullscreen = document.getElementById('code-editor').classList.contains("fullscreen");
+			isFullscreen = isFullscreen || document.getElementById('repl').classList.contains("fullscreen");
 			// this basically requires a double escape to minimize
 			if (isFullscreen && !focussed.classList.contains("cm-content")){
-				toggleFullscreenEditor();
+				if ( doublePreviousConsoleLayout)
+					consoleLayout( doublePreviousConsoleLayout );
+				else
+					consoleLayout( 'editor-full' );
 			}
 
 			let mpl = document.getElementById('MPL-container');
@@ -732,6 +812,11 @@
 			lastKey = e.key;
 			e.preventDefault();
 		}
+
+		// Toggle command palette (enabled even in inputs)
+		if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.code === 'KeyP') {
+		showCommandPalette = !showCommandPalette;
+	  }
 
 		if (e.target.tagName === 'INPUT') return;
 		if (focussed.classList.contains("cm-content")) return;
@@ -775,10 +860,6 @@
 
 		}
   
-	  // Toggle command palette
-	  if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.code === 'KeyP') {
-		showCommandPalette = !showCommandPalette;
-	  }
 	  // Add this condition to close the command palette when Esc is pressed
 	  if (e.key === 'Escape' && showCommandPalette) {
 		showCommandPalette = false;
@@ -896,7 +977,7 @@
 	  display: flex;
 	  justify-content: center;
 	  align-items: center;
-	  z-index: 10;
+	  z-index: 99999;
 	}
 </style>
 
@@ -983,14 +1064,12 @@
 		<!-- Ghost path for the in-progress cut connection -->
 		<path d={ghostCutPath} stroke="{config.link.cut.color}" stroke-width="{config.link.cut.stroke_width}" fill="none" />
 	</svg>
-  
-	{#if showCommandPalette}
-	  <div class="command-palette-overlay">
-		<CommandPalette {commands} on:selectCommand={(e) => handleCommand(e.detail)} />
-	  </div>
-	{/if}
-	<!-- <PyodideTerm /> -->
 </div>
+{#if showCommandPalette}
+	<div class="command-palette-overlay">
+	<CommandPalette {commands} on:selectCommand={(e) => handleCommand(e.detail)} />
+	</div>
+{/if}
 <PythonRepl {pyodide} on:pyodideLoaded={onPythonExecutorReady} {pythonCode} on:update={(e)=>{pythonCode = e.detail}}/>
 <div>
 	<div id="MPL-container" style="position:absolute; top:0;"></div>

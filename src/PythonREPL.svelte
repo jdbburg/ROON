@@ -94,17 +94,60 @@
     .input-area {
       border-top: 1px solid #555;
       padding-bottom: 5px;
+      overflow-y: auto;
       /* background: #333; */
     }
 
     .fullscreen {
       position: fixed;
-      top: 0;
-      left: 5%;
-      width: 90%;
-      height: 100%;
+      top: 1em;
+      left: 2%;
+      width: 96%;
+      height: calc( 100% - 2em);
+      max-height: 100%;
       overflow-y: auto;
       z-index: 9999;
+    }
+
+    .side-by-side {
+      display: flex;
+      flex-direction: row;
+      /* width: 100%; */
+      /* height: 100%; */
+    }
+
+    .top-bottom {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .top {
+      flex: 6;
+      padding: 0px;
+      background-color: #222;
+      color: #eee;
+    }
+
+    .bottom {
+      flex: 1;
+      padding: 0px;
+      background-color: #333;
+      color: #eee;
+    }
+    .left {
+      flex: 1;
+      padding: 0px;
+      background-color: #222;
+      color: #eee;
+    }
+    .hidden {
+      display: none;
+    }
+    .right {
+      flex: 1;
+      padding: 0px;
+      background-color: #333;
+      color: #eee;
     }
   
     /* input {
@@ -118,18 +161,19 @@
       outline: none;
     } */
   </style>
-  
-  <div class="repl">
+
+  <div id="repl" class="repl top-bottom">
     <!-- Output region showing command + result lines -->
-    <div class="output">
+    <div id="console-output" class="output top">
       {#each outputLines as line}
         <div class="line">{line}</div>
       {/each}
     </div>
     
     <!-- Input for Python commands, uses codemirror -->
-    <div id="code-editor" class="input-area">
+    <div id="code-editor" class="input-area bottom">
       <CodeEditor value={pythonCode} onChange={handleCodeChange} onShiftEnter={handleEnter} immediateMode={true}/>
     </div>  
-    <div class="fullscreen" style="display:none;"></div>
+    <div class="fullscreen hidden side-by-side left right" style="display:none;"></div>
+    <div class="fullscreen hidden side-by-side right" style="display:none;"></div>
   </div>

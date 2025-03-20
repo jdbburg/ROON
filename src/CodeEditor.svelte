@@ -1,7 +1,7 @@
 <script>
     import { onMount, onDestroy } from 'svelte';
     import { EditorState } from '@codemirror/state';
-    import { EditorView, keymap, lineNumbers, drawSelection, highlightActiveLine } from '@codemirror/view';
+    import { EditorView, keymap, lineNumbers, drawSelection, highlightActiveLine, scrollPastEnd } from '@codemirror/view';
     // import { defaultKeymap } from '@codemirror/commands';
     import { python } from '@codemirror/lang-python';
     import { basicSetup } from 'codemirror';
@@ -9,7 +9,7 @@
     import { autocompletion, completionKeymap } from '@codemirror/autocomplete';
     import { highlightSpecialChars, rectangularSelection } from '@codemirror/view';
     import { foldGutter, foldKeymap } from '@codemirror/language';
-    import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
+    import { defaultKeymap, history, historyKeymap, insertTab } from '@codemirror/commands';
     
   
     // Props
@@ -39,6 +39,11 @@
             return true; // Indicate the keypress was handled
         },
         preventDefault: true // Explicitly prevent default behavior
+    },
+    {
+      key: "Tab",
+      run: insertTab, // Inserts a tab character (\t)
+      preventDefault: true // Prevents the browser's default focus shift
     }
     ];
 
@@ -54,6 +59,7 @@
     // Custom basic setup without conflicting defaults
     const customBasicSetup = [
         lineNumbers(),
+        scrollPastEnd(),
         highlightSpecialChars(),
         history(),
         foldGutter(),
@@ -130,7 +136,7 @@
         /* bottom: 200px; */
       width: 100%;
       /* height: 800px; Adjust height as needed */
-      border: 1px solid #ccc;
-      z-index: 9999;
+      /* border: 1px solid #ccc; */
+      z-index: 999;
     }
   </style>

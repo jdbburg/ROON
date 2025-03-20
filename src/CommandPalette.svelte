@@ -72,6 +72,7 @@
       padding: 10px;
       width: 50%;
       box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      z-index: 9999;
     }
     input {
       width: 100%;
